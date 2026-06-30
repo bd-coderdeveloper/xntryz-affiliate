@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/utils/supabase';
 
 export async function POST(request: Request) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+
   try {
     const body = await request.json();
     const { page_id, post_id, product_id, post_url } = body;
@@ -9,7 +15,7 @@ export async function POST(request: Request) {
     if (!post_id || !product_id) {
       return NextResponse.json(
         { error: 'Missing post_id or product_id' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -21,12 +27,6 @@ export async function POST(request: Request) {
         product_id,
         post_url: post_url || ''
       });
-
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    };
 
     if (error) {
       if (error.code === '23505') {
