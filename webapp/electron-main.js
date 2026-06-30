@@ -21,10 +21,7 @@ function createWindow() {
     autoHideMenuBar: true,
   });
 
-  mainWindow.loadFile("launcher-gui.html").then(() => {
-    mainWindow.webContents.send('set-version', app.getVersion());
-    startNextJsServer();
-  });
+  mainWindow.loadFile("launcher-gui.html");
 
   mainWindow.on("closed", function () {
     mainWindow = null;
@@ -128,6 +125,11 @@ app.on("activate", function () {
 // IPC handler to open the browser
 ipcMain.on("open-browser", () => {
   shell.openExternal(`http://localhost:${PORT}`);
+});
+
+ipcMain.on("gui-ready", (event) => {
+  event.sender.send('set-version', app.getVersion());
+  startNextJsServer();
 });
 
 ipcMain.on("stop-server", () => {

@@ -211,6 +211,9 @@
       document.querySelector('h1').textContent = `BD FB Affiliate | V.${version}`;
     });
 
+    // Notify main process that the GUI has finished loading its scripts and is ready for IPC
+    ipcRenderer.send('gui-ready');
+
     const terminal = document.getElementById('terminal');
     const btnOpen = document.getElementById('btn-open');
     const btnStop = document.getElementById('btn-stop');
