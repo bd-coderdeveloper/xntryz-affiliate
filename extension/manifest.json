@@ -1,17 +1,27 @@
 {
   "manifest_version": 3,
-  "name": "FB Affiliate System Extractor",
+  "name": "BD FB Affiliate System",
   "version": "1.0",
   "description": "ดึงโพสต์จาก Facebook Page เข้าสู่ระบบจัดการคิวงาน Affiliate",
-  "permissions": ["activeTab", "scripting", "storage"],
-  "host_permissions": ["*://*.facebook.com/*"],
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "*://*.facebook.com/*"
+  ],
   "action": {
     "default_popup": "popup.html"
   },
   "content_scripts": [
     {
-      "matches": ["*://*.facebook.com/*"],
-      "js": ["content.js"]
+      "matches": [
+        "*://*.facebook.com/*"
+      ],
+      "js": [
+        "content.js"
+      ]
     }
   ]
 }

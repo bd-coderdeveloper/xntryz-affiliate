@@ -54,7 +54,7 @@ def update_task_status(task_id, status, error_message=None):
         print("Error updating task:", e)
 
 def process_task(task):
-    print(f"กำลังรันคิวงาน: โพสต์ {task['post_id']} -> สินค้า {task['product_id']}")
+    print(f"กำลังรันคิวงาน: โพสต์ {task['post_id']} -> ลิงก์ {task['affiliate_link']}")
     update_task_status(task['id'], 'processing')
     
     try:
@@ -75,14 +75,11 @@ def process_task(task):
         # 3. กด 'แก้ไขโพสต์' (Edit Post)
         # d(textContains="แก้ไข").click()
         
-        # 4. กดปุ่ม 'แท็กสินค้า' (Tag Products)
-        # d(textContains="แท็กสินค้า").click()
+        # 4. พิมพ์ลิงก์หรือแท็กสินค้า
+        # (แก้ไขตามความต้องการของบอทว่าจะใส่ affiliate_link เข้าไปแบบไหน)
+        # d(textContains="แก้ไขโพสต์").send_keys(task['affiliate_link'])
         
-        # 5. พิมพ์รหัสสินค้าและเลือก
-        # d(resourceId="com.facebook.katana:id/search_box").send_keys(task['product_id'])
-        # d(textContains=task['product_id']).click()
-        
-        # 6. กดบันทึก
+        # 5. กดบันทึก
         # d(textContains="บันทึก").click()
         
         print("จำลองการทำงานเสร็จสิ้น (ต้องแก้ Selector ให้ตรงกับแอพจริง)")
