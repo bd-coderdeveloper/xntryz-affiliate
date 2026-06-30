@@ -204,11 +204,12 @@
 
   <script>
     const { ipcRenderer } = require('electron');
-    const pkg = require('./package.json');
 
-    // Set dynamic version
-    document.title = `BD FB Affiliate Launcher | V.${pkg.version}`;
-    document.querySelector('h1').textContent = `BD FB Affiliate | V.${pkg.version}`;
+    // Wait for version from main process
+    ipcRenderer.on('set-version', (event, version) => {
+      document.title = `BD FB Affiliate Launcher | V.${version}`;
+      document.querySelector('h1').textContent = `BD FB Affiliate | V.${version}`;
+    });
 
     const terminal = document.getElementById('terminal');
     const btnOpen = document.getElementById('btn-open');

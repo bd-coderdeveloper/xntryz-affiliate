@@ -87,6 +87,7 @@ app.on("ready", () => {
   createWindow();
 
   mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.send('set-version', app.getVersion());
     startNextJsServer();
   });
 
