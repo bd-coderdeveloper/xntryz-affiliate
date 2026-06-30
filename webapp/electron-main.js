@@ -89,7 +89,7 @@ app.on("ready", () => {
     if (mainWindow) mainWindow.webContents.send("server-log", `SYSTEM: มีการอัปเดตเวอร์ชันใหม่: ${info.version}`);
   });
   autoUpdater.on("update-not-available", (info) => {
-    if (mainWindow) mainWindow.webContents.send("server-log", "SYSTEM: คุณได้ใช้ UPFEEDTH เวอร์ชันล่าสุดแล้ว");
+    if (mainWindow) mainWindow.webContents.send("server-log", "SYSTEM: คุณได้ใช้ BD FB Affiliate เวอร์ชันล่าสุดแล้ว");
   });
   autoUpdater.on("error", (err) => {
     if (mainWindow) mainWindow.webContents.send("server-log", "ERROR: เกิดข้อผิดพลาดในการอัปเดตอัตโนมัติ " + err);

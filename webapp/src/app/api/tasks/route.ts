@@ -10,11 +10,11 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { page_id, post_id, product_id, post_url } = body;
+    const { page_id, post_id, affiliate_link, post_url } = body;
 
-    if (!post_id || !product_id) {
+    if (!post_id || !affiliate_link) {
       return NextResponse.json(
-        { error: 'Missing post_id or product_id' },
+        { error: 'Missing post_id or affiliate_link' },
         { status: 400, headers: corsHeaders }
       );
     }
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       .insert({
         page_id: page_id || 'UNKNOWN_PAGE',
         post_id,
-        product_id,
+        affiliate_link,
         post_url: post_url || ''
       });
 

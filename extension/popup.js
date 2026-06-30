@@ -1,32 +1,174 @@
+let eaabToken = null;
+let pagesData = [];
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const statusDiv = document.getElementById('status');
+  const pageSelect = document.getElementById('pageSelect');
+  const extractBtn = document.getElementById('extractBtn');
+  
+  // กำหนดวันที่เริ่มต้น (เช่นย้อนหลัง 7 วัน) และสิ้นสุด (วันนี้) ให้เป็นค่าเริ่มต้น
+  const today = new Date();
+  const pastWeek = new Date();
+  pastWeek.setDate(today.getDate() - 7);
+  
+  document.getElementById('endDate').value = today.toISOString().split('T')[0];
+  document.getElementById('startDate').value = pastWeek.toISOString().split('T')[0];
+
+  try {
+    statusDiv.textContent = 'กำลังดึงข้อมูล Token...';
+    
+    // 1. Fetch EAAB Token จาก Business Facebook
+    const res = await fetch('https://business.facebook.com/content_management');
+    const html = await res.text();
+    
+    const match = html.match(/(EAAB[a-zA-Z0-9_\-\\]{15,})/);
+    if (!match) {
+      throw new Error('ไม่พบ EAAB Token: กรุณาล็อกอิน Facebook หรือเปิดแท็บ Business Suite ก่อน');
+    }
+    
+    eaabToken = match[1];
+    statusDiv.textContent = 'ได้ Token แล้ว! กำลังดึงรายชื่อเพจ...';
+
+    // 2. Fetch รายชื่อเพจจาก Graph API
+    const pageRes = await fetch(`https://graph.facebook.com/v21.0/me/accounts?access_token=${eaabToken}&fields=id,name,access_token&limit=2000`);
+    const pageJson = await pageRes.json();
+    
+    if (pageJson.error) {
+      throw new Error(pageJson.error.message);
+    }
+    
+    pagesData = pageJson.data || [];
+    
+    if (pagesData.length === 0) {
+      pageSelect.innerHTML = '<option value="">คุณไม่ได้เป็นแอดมินเพจใดๆ</option>';
+      statusDiv.textContent = 'ไม่พบเพจที่จัดการ';
+      return;
+    }
+    
+    // 3. แสดงรายชื่อเพจใน Dropdown
+    pageSelect.innerHTML = '';
+    pagesData.forEach(page => {
+      const option = document.createElement('option');
+      option.value = page.id;
+      option.textContent = page.name;
+      pageSelect.appendChild(option);
+    });
+    
+    statusDiv.textContent = 'พร้อมใช้งาน';
+    extractBtn.disabled = false;
+    
+  } catch (error) {
+    statusDiv.style.color = '#ef4444';
+    statusDiv.textContent = error.message;
+  }
+});
+
 document.getElementById('extractBtn').addEventListener('click', async () => {
-  const productId = document.getElementById('productId').value.trim();
+  const pageId = document.getElementById('pageSelect').value;
+  const startDateStr = document.getElementById('startDate').value;
+  const endDateStr = document.getElementById('endDate').value;
+  const affiliateLink = document.getElementById('affiliateLink').value.trim();
   const statusDiv = document.getElementById('status');
   
-  if (!productId) {
-    statusDiv.style.color = 'red';
-    statusDiv.textContent = 'กรุณาใส่รหัสสินค้าก่อน!';
+  if (!affiliateLink) {
+    statusDiv.style.color = '#ef4444';
+    statusDiv.textContent = 'กรุณาใส่ Shopee Affiliate Link!';
+    return;
+  }
+  
+  const page = pagesData.find(p => p.id === pageId);
+  if (!page || !page.access_token) {
+    statusDiv.style.color = '#ef4444';
+    statusDiv.textContent = 'ไม่พบ Token ของเพจที่เลือก';
     return;
   }
 
-  statusDiv.style.color = '#ff8515';
-  statusDiv.textContent = 'กำลังดึงข้อมูล...';
+  const startDate = new Date(startDateStr);
+  startDate.setHours(0, 0, 0, 0);
+  
+  const endDate = new Date(endDateStr);
+  endDate.setHours(23, 59, 59, 999);
 
-  // ส่งคำสั่งไปยัง content.js ของแท็บปัจจุบัน
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.tabs.sendMessage(tabs[0].id, { action: 'extract_posts', productId }, (response) => {
-      if (chrome.runtime.lastError) {
-        statusDiv.style.color = 'red';
-        statusDiv.textContent = 'เกิดข้อผิดพลาด: โปรดเปิดหน้า Facebook Page แล้วลองใหม่';
-        return;
+  statusDiv.style.color = '#ff8515';
+  statusDiv.textContent = 'กำลังดึงโพสต์...';
+  
+  let allPosts = [];
+  let nextUrl = `https://graph.facebook.com/v21.0/${pageId}/published_posts?fields=id,created_time,permalink_url&limit=100&access_token=${page.access_token}`;
+  
+  try {
+    // วนลูป Pagination ดึงโพสต์
+    while (nextUrl) {
+      const res = await fetch(nextUrl);
+      const json = await res.json();
+      
+      if (json.error) {
+        throw new Error(json.error.message);
       }
       
-      if (response && response.success) {
-        statusDiv.style.color = '#4ade80'; // Green
-        statusDiv.textContent = `ส่งข้อมูลสำเร็จ ${response.count} โพสต์!`;
-      } else {
-        statusDiv.style.color = 'red';
-        statusDiv.textContent = 'ไม่พบโพสต์ หรือเกิดข้อผิดพลาด';
+      const posts = json.data || [];
+      if (posts.length === 0) break;
+      
+      let shouldStop = false;
+      
+      for (const post of posts) {
+        const postDate = new Date(post.created_time);
+        
+        // ถ้าโพสต์เก่ากว่าวันที่เริ่ม ให้หยุดดึง (เพราะโพสต์เรียงจากใหม่ไปเก่า)
+        if (postDate < startDate) {
+          shouldStop = true;
+          break;
+        }
+        
+        if (postDate >= startDate && postDate <= endDate) {
+          allPosts.push(post);
+        }
       }
-    });
-  });
+      
+      if (shouldStop) break;
+      
+      nextUrl = json.paging && json.paging.next ? json.paging.next : null;
+      statusDiv.textContent = `กำลังดึงโพสต์... (พบแล้ว ${allPosts.length} โพสต์)`;
+    }
+    
+    if (allPosts.length === 0) {
+      statusDiv.style.color = '#ef4444';
+      statusDiv.textContent = 'ไม่พบโพสต์ในช่วงเวลาที่กำหนด';
+      return;
+    }
+    
+    statusDiv.textContent = `กำลังส่งข้อมูล ${allPosts.length} โพสต์ไปยังระบบ...`;
+    
+    // ส่งข้อมูลไปที่ WebApp (Localhost)
+    let successCount = 0;
+    for (const post of allPosts) {
+      try {
+        // แยก Post ID อกกจาก PageID_PostID
+        const actualPostId = post.id.includes('_') ? post.id.split('_')[1] : post.id;
+        
+        const response = await fetch('http://localhost:3000/api/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            page_id: pageId,
+            post_id: actualPostId,
+            post_url: post.permalink_url || `https://www.facebook.com/${actualPostId}`,
+            affiliate_link: affiliateLink
+          })
+        });
+        
+        if (response.ok) {
+          successCount++;
+        }
+      } catch (e) {
+        console.error('Failed to send task:', e);
+      }
+    }
+    
+    statusDiv.style.color = '#10b981';
+    statusDiv.textContent = `ส่งข้อมูลสำเร็จ ${successCount} จาก ${allPosts.length} โพสต์!`;
+    
+  } catch (error) {
+    statusDiv.style.color = '#ef4444';
+    statusDiv.textContent = `เกิดข้อผิดพลาด: ${error.message}`;
+  }
 });

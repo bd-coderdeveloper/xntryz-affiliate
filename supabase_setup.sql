@@ -4,14 +4,14 @@ CREATE TABLE public.affiliate_tasks (
     page_id TEXT NOT NULL,
     post_id TEXT NOT NULL,
     post_url TEXT,
-    product_id TEXT NOT NULL,
+    affiliate_link TEXT NOT NULL,
     status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
     error_message TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     
     -- ป้องกันการแท็กสินค้าเดิมซ้ำในโพสต์เดิม
-    UNIQUE (post_id, product_id)
+    UNIQUE (post_id, affiliate_link)
 );
 
 -- สร้าง Trigger สำหรับอัปเดตเวลา updated_at อัตโนมัติ
