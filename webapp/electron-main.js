@@ -129,3 +129,96 @@ ipcMain.on("stop-server", () => {
     }
   }
 });
+
+let botProcess = null;
+
+ipcMain.on("launch-ldplayer", () => {
+  const { exec } = require('child_process');
+  exec('reg query "HKCU\\Software\\XuanZhi\\LDPlayer9" /v InstallDir', (error, stdout) => {
+    if (error) {
+      exec('reg query "HKCU\\Software\\XuanZhi\\LDPlayer" /v InstallDir', (err2, stdout2) => {
+        if (err2) {
+          mainWindow?.webContents.send("server-log", "SYSTEM ERROR: ค้นหา LDPlayer ไม่พบ โปรดติดตั้งโปรแกรมก่อน หรือเปิดด้วยตัวเอง");
+          return;
+        }
+        launchDnplayer(stdout2);
+      });
+      return;
+    }
+    launchDnplayer(stdout);
+  });
+
+  function launchDnplayer(regOutput) {
+    const match = regOutput.match(/InstallDir\s+REG_SZ\s+(.*)/i);
+    if (match && match[1]) {
+      const installDir = match[1].trim();
+      const exePath = path.join(installDir, 'dnplayer.exe');
+      mainWindow?.webContents.send("server-log", `SYSTEM: กำลังเปิด ${exePath}...`);
+      require('child_process').exec(`"${exePath}"`);
+    } else {
+      mainWindow?.webContents.send("server-log", "SYSTEM ERROR: ไม่สามารถระบุที่อยู่ของ LDPlayer ได้");
+    }
+  }
+});
+
+ipcMain.on("start-bot", () => {
+  if (botProcess) {
+    mainWindow?.webContents.send("server-log", "BOT SYSTEM: บอทกำลังทำงานอยู่แล้ว");
+    return;
+  }
+
+  const isDev = !app.isPackaged;
+  const botExePath = isDev
+    ? path.join(__dirname, "resources", "bot.exe")
+    : path.join(process.resourcesPath, "bot.exe");
+
+  const fs = require('fs');
+  if (!fs.existsSync(botExePath)) {
+    mainWindow?.webContents.send("server-log", `BOT ERROR: ไม่พบไฟล์บอทที่ ${botExePath}`);
+    mainWindow?.webContents.send("bot-status", "stopped");
+    return;
+  }
+
+  // Load .env.local variables to pass to bot
+  const envPath = path.join(__dirname, ".env.local");
+  let botEnv = { ...process.env, PYTHONIOENCODING: 'utf-8' };
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    envContent.split('\n').forEach(line => {
+      const match = line.match(/^([^=]+)=(.*)$/);
+      if (match) {
+        botEnv[match[1].trim()] = match[2].trim();
+      }
+    });
+  }
+
+  botProcess = spawn(botExePath, [], { env: botEnv });
+  mainWindow?.webContents.send("bot-status", "started");
+
+  botProcess.stdout.on("data", (data) => {
+    if (mainWindow) mainWindow.webContents.send("bot-log", data.toString());
+  });
+
+  botProcess.stderr.on("data", (data) => {
+    if (mainWindow) mainWindow.webContents.send("bot-log", `ERROR: ${data.toString()}`);
+  });
+
+  botProcess.on("close", (code) => {
+    if (mainWindow) {
+      mainWindow.webContents.send("bot-log", `SYSTEM: บอทปิดการทำงาน (Code: ${code})`);
+      mainWindow.webContents.send("bot-status", "stopped");
+    }
+    botProcess = null;
+  });
+});
+
+ipcMain.on("stop-bot", () => {
+  if (botProcess) {
+    botProcess.kill();
+    botProcess = null;
+    if (mainWindow) {
+      mainWindow.webContents.send("bot-log", "SYSTEM: บังคับปิดการทำงานบอทเรียบร้อย...");
+      mainWindow.webContents.send("bot-status", "stopped");
+    }
+  }
+});

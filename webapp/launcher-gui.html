@@ -187,6 +187,16 @@
         <button class="btn-danger" id="btn-stop">ปิดระบบ</button>
       </div>
     </div>
+    
+    <div class="header" style="margin-top: -10px; background: rgba(15, 23, 42, 0.5); padding: 10px 20px;">
+      <div style="font-size: 14px; font-weight: 600; color: #94a3b8;">Bot Controls:</div>
+      <div class="actions">
+        <button class="btn-primary" style="background-color: #8b5cf6; box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.39);" id="btn-ldplayer">เปิด LDPlayer</button>
+        <button class="btn-primary" style="background-color: #10b981; box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39);" id="btn-start-bot">เริ่มทำงาน Bot</button>
+        <button class="btn-danger" id="btn-stop-bot" disabled style="opacity: 0.5;">หยุด Bot</button>
+      </div>
+    </div>
+
     <div class="terminal" id="terminal">
       <div class="log-info">กำลังตรวจสอบระบบ FB Affiliate System...</div>
     </div>
@@ -203,6 +213,11 @@
     const terminal = document.getElementById('terminal');
     const btnOpen = document.getElementById('btn-open');
     const btnStop = document.getElementById('btn-stop');
+    
+    const btnLdplayer = document.getElementById('btn-ldplayer');
+    const btnStartBot = document.getElementById('btn-start-bot');
+    const btnStopBot = document.getElementById('btn-stop-bot');
+    
     const statusDot = document.querySelector('.status-dot');
     const statusText = document.getElementById('status-text');
 
@@ -210,15 +225,15 @@
       const line = document.createElement('div');
       line.className = 'log-line';
 
-      if (msg.includes('ERROR:')) {
+      if (msg.includes('ERROR:') || msg.includes('BOT ERROR:')) {
         line.classList.add('log-error');
-      } else if (msg.includes('SYSTEM:')) {
+      } else if (msg.includes('SYSTEM:') || msg.includes('BOT SYSTEM:')) {
         line.style.color = '#ebcb8b'; // Yellow for system
         line.style.fontWeight = 'bold';
       } else if (msg.includes('SYSTEM ERROR:')) {
         line.classList.add('log-error');
         line.style.fontWeight = 'bold';
-      } else if (msg.includes('ready') || msg.includes('started')) {
+      } else if (msg.includes('ready') || msg.includes('started') || msg.includes('สำเร็จ')) {
         line.classList.add('log-info');
       }
 
@@ -238,6 +253,25 @@
       }
     });
 
+    // Bot logs
+    ipcRenderer.on('bot-log', (event, msg) => {
+      addLog(`[BOT] ${msg}`);
+    });
+    
+    ipcRenderer.on('bot-status', (event, status) => {
+      if (status === 'started') {
+        btnStartBot.disabled = true;
+        btnStartBot.style.opacity = '0.5';
+        btnStopBot.disabled = false;
+        btnStopBot.style.opacity = '1';
+      } else if (status === 'stopped') {
+        btnStartBot.disabled = false;
+        btnStartBot.style.opacity = '1';
+        btnStopBot.disabled = true;
+        btnStopBot.style.opacity = '0.5';
+      }
+    });
+
     btnOpen.addEventListener('click', () => {
       ipcRenderer.send('open-browser');
     });
@@ -246,7 +280,23 @@
       ipcRenderer.send('stop-server');
       addLog('กำลังปิดระบบ...');
     });
-  </script>
+    
+    btnLdplayer.addEventListener('click', () => {
+      ipcRenderer.send('launch-ldplayer');
+      addLog('SYSTEM: สั่งเปิดโปรแกรม LDPlayer...');
+    });
+    
+    btnStartBot.addEventListener('click', () => {
+      ipcRenderer.send('start-bot');
+      addLog('BOT SYSTEM: กำลังสั่งรันบอท...');
+    });
+    
+    btnStopBot.addEventListener('click', () => {
+      ipcRenderer.send('stop-bot');
+      addLog('BOT SYSTEM: สั่งหยุดการทำงานบอท...');
+    });
+
+
 </body>
 
 </html>

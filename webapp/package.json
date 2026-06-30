@@ -1,6 +1,6 @@
 {
   "name": "webapp",
-  "version": "1.0.9",
+  "version": "1.0.12",
   "private": true,
   "repository": "https://github.com/bd-coderdeveloper/xntryz-affiliate",
   "author": "bd-coderdeveloper",
@@ -41,6 +41,10 @@
       {
         "from": ".next/static",
         "to": "standalone_app/.next/static"
+      },
+      {
+        "from": "resources/bot.exe",
+        "to": "bot.exe"
       }
     ],
     "win": {
