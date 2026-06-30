@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "BD FB Affiliate System",
-  "version": "1.0",
+  "version": "1.1",
   "description": "ดึงโพสต์จาก Facebook Page เข้าสู่ระบบจัดการคิวงาน Affiliate",
   "permissions": [
     "activeTab",
