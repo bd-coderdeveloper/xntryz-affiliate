@@ -75,6 +75,10 @@ function startNextJsServer() {
     const msg = data.toString();
     if (msg.toLowerCase().includes("deprecated") || msg.toLowerCase().includes("warning")) {
       console.warn(`[Next.js Warning] ${msg}`);
+      if (msg.includes('Node.js 20 and below are deprecated')) {
+        // Just ignore the warning completely so it doesn't confuse the user
+        return;
+      }
       if (mainWindow) {
         mainWindow.webContents.send("server-log", `WARNING: ${msg}`);
       }
@@ -219,9 +223,11 @@ ipcMain.on("start-bot", () => {
   if (fs.existsSync(envPath)) {
     const envContent = fs.readFileSync(envPath, 'utf8');
     envContent.split('\n').forEach(line => {
-      const match = line.match(/^([^=]+)=(.*)$/);
-      if (match) {
-        botEnv[match[1].trim()] = match[2].trim();
+      if (line.includes('=')) {
+        const index = line.indexOf('=');
+        const key = line.substring(0, index).trim();
+        const val = line.substring(index + 1).trim();
+        if (key) botEnv[key] = val;
       }
     });
   } else {
