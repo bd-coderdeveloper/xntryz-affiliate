@@ -63,23 +63,56 @@ def process_task(task):
         if d is None:
             raise Exception("Device is not connected")
             
+        # 0. สลับโปรไฟล์ไปที่เพจ
+        url_page = f"fb://page/{task['page_id']}"
+        print(f"กำลังสลับโปรไฟล์เพจ: {url_page}")
+        d.shell(f'am start -a android.intent.action.VIEW -d "{url_page}"')
+        time.sleep(8)
+        
+        print("กำลังหาปุ่มสลับโปรไฟล์...")
+        if d(textContains="Switch").exists(timeout=3):
+            d(textContains="Switch").click()
+            print("สลับโปรไฟล์สำเร็จ (Switch)")
+            time.sleep(6)
+        elif d(textContains="สลับ").exists(timeout=3):
+            d(textContains="สลับ").click()
+            print("สลับโปรไฟล์สำเร็จ (สลับ)")
+            time.sleep(6)
+        else:
+            print("ไม่พบปุ่มสลับ อาจจะอยู่ในโปรไฟล์เพจอยู่แล้ว")
+
         # 1. เปิด Facebook ไปที่โพสต์โดยตรงผ่าน Deep Link
         url = f"https://www.facebook.com/{task['page_id']}/posts/{task['post_id']}"
-        print(f"เปิด URL: {url}")
+        print(f"เปิด URL โพสต์: {url}")
         d.shell(f'am start -a android.intent.action.VIEW -d "{url}"')
         time.sleep(8) # รอโหลดหน้าโพสต์
         
         # 2. กดปุ่ม 'จุดสามจุด' (Menu) ของโพสต์
         print("กำลังค้นหาปุ่มจุดสามจุด...")
-        if d(descriptionContains="More").exists(timeout=3):
-            d(descriptionContains="More").click()
-        elif d(descriptionContains="เพิ่มเติม").exists(timeout=3):
-            d(descriptionContains="เพิ่มเติม").click()
-        elif d(description="More options").exists(timeout=3):
-            d(description="More options").click()
-        else:
-            print("หาปุ่มจุดสามจุดไม่พบ ลองกดแบบสุ่มตำแหน่ง...")
-            d.click(950, 150) # เดาตำแหน่งมุมขวาบนของจอ
+        clicked_more = False
+        keywords = ["More", "more", "เพิ่มเติม", "ตัวเลือก", "Menu", "menu", "More options"]
+        
+        for kw in keywords:
+            if d(descriptionContains=kw).exists:
+                d(descriptionContains=kw)[0].click()
+                clicked_more = True
+                print(f"พบปุ่ม 3 จุด ({kw})")
+                break
+                
+        if not clicked_more:
+            print("หาปุ่มจุดสามจุดไม่พบในหน้าแรก ลองปัดหน้าจอลงเล็กน้อย...")
+            d.swipe(500, 800, 500, 400) # เลื่อนหน้าจอลง
+            time.sleep(3)
+            for kw in keywords:
+                if d(descriptionContains=kw).exists:
+                    d(descriptionContains=kw)[0].click()
+                    clicked_more = True
+                    print(f"พบปุ่ม 3 จุด ({kw}) หลังเลื่อนจอ")
+                    break
+                    
+        if not clicked_more:
+            print("ไม่พบปุ่มจุด 3 จุด (ข้ามการคลิกมั่วเพื่อป้องกันการเปิดวิดีโอ)")
+            raise Exception("ไม่พบปุ่มเมนู 3 จุดของโพสต์")
         
         time.sleep(3)
         
