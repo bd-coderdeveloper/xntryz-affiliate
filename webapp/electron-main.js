@@ -23,6 +23,10 @@ function createWindow() {
 
   mainWindow.loadFile("launcher-gui.html");
 
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    console.log(`[Renderer Console] ${message}`);
+  });
+
   mainWindow.on("closed", function () {
     mainWindow = null;
     if (serverProcess) {
@@ -128,7 +132,15 @@ ipcMain.on("open-browser", () => {
 });
 
 ipcMain.on("gui-ready", (event) => {
-  event.sender.send('set-version', app.getVersion());
+  console.log("RECEIVED gui-ready EVENT!");
+  try {
+    const version = app.getVersion();
+    console.log("Version is: " + version);
+    event.sender.send('set-version', version);
+  } catch (e) {
+    console.log("Error getting version: " + e.message);
+    event.sender.send('set-version', '1.0.17');
+  }
   startNextJsServer();
 });
 

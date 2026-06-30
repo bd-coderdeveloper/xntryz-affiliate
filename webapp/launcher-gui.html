@@ -203,16 +203,20 @@
   </div>
 
   <script>
-    const { ipcRenderer } = require('electron');
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.log(`ERROR: ${message} at ${source}:${lineno}:${colno}`);
+    };
+    try {
+      const { ipcRenderer } = require('electron');
 
-    // Wait for version from main process
-    ipcRenderer.on('set-version', (event, version) => {
-      document.title = `BD FB Affiliate Launcher | V.${version}`;
-      document.querySelector('h1').textContent = `BD FB Affiliate | V.${version}`;
-    });
+      // Wait for version from main process
+      ipcRenderer.on('set-version', (event, version) => {
+        document.title = `BD FB Affiliate Launcher | V.${version}`;
+        document.querySelector('h1').textContent = `BD FB Affiliate | V.${version}`;
+      });
 
-    // Notify main process that the GUI has finished loading its scripts and is ready for IPC
-    ipcRenderer.send('gui-ready');
+      // Notify main process that the GUI has finished loading its scripts and is ready for IPC
+      ipcRenderer.send('gui-ready');
 
     const terminal = document.getElementById('terminal');
     const btnOpen = document.getElementById('btn-open');
@@ -300,7 +304,10 @@
       addLog('BOT SYSTEM: สั่งหยุดการทำงานบอท...');
     });
 
-
+    } catch (e) {
+      console.log(`ERROR: ${e.message}`);
+    }
+  </script>
 </body>
 
 </html>
