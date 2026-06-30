@@ -85,7 +85,10 @@ function startNextJsServer() {
 
 app.on("ready", () => {
   createWindow();
-  startNextJsServer();
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    startNextJsServer();
+  });
 
   // Auto Updater logic
   autoUpdater.checkForUpdatesAndNotify();
