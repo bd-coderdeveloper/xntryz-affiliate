@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>FB Affiliate System Extractor</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 15px; width: 300px; background: #171717; color: #ededed; }
+    h3 { margin-top: 0; color: #ff8515; }
+    input { width: 100%; box-sizing: border-box; padding: 8px; margin-bottom: 10px; background: #262626; border: 1px solid #404040; color: white; border-radius: 4px; }
+    button { width: 100%; padding: 10px; background: #ff8515; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    button:hover { background: #f06a06; }
+    #status { margin-top: 10px; font-size: 12px; color: #a3a3a3; text-align: center; }
+  </style>
+</head>
+<body>
+  <h3>FB Affiliate Extractor</h3>
+  <label for="productId" style="font-size: 12px; color: #a3a3a3; display: block; margin-bottom: 5px;">
+    รหัสสินค้า Affiliate (Product ID):
+  </label>
+  <input type="text" id="productId" placeholder="ใส่รหัสสินค้าที่จะโปรโมทที่นี่" />
+  
+  <button id="extractBtn">ดึงโพสต์ในหน้านี้เข้าคิวงาน</button>
+  <div id="status"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
