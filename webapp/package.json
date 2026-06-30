@@ -18,7 +18,8 @@
     "appId": "com.upfeedth.affiliatesystem",
     "productName": "BD FB Affiliate",
     "publish": {
-      "provider": "github"
+      "provider": "github",
+      "releaseType": "release"
     },
     "directories": {
       "output": "dist"
