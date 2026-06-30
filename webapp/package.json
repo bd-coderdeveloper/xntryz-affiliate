@@ -24,10 +24,23 @@
       "output": "dist"
     },
     "files": [
-      ".next/standalone/**/*",
       "launcher-gui.html",
       "electron-main.js",
       "upfeed_logo.png"
+    ],
+    "extraResources": [
+      {
+        "from": ".next/standalone",
+        "to": "standalone_app"
+      },
+      {
+        "from": "public",
+        "to": "standalone_app/public"
+      },
+      {
+        "from": ".next/static",
+        "to": "standalone_app/.next/static"
+      }
     ],
     "win": {
       "target": "nsis",
