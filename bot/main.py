@@ -64,21 +64,29 @@ def process_task(task):
             raise Exception("Device is not connected")
             
         # 0. สลับโปรไฟล์ไปที่เพจ
-        url_page = f"fb://page/{task['page_id']}"
-        print(f"กำลังสลับโปรไฟล์เพจ: {url_page}")
+        url_page = f"https://www.facebook.com/{task['page_id']}"
+        print(f"กำลังเปิดหน้าเพจเพื่อสลับโปรไฟล์: {url_page}")
         d.shell(f'am start -a android.intent.action.VIEW -d "{url_page}"')
-        time.sleep(8)
+        time.sleep(10) # รอโหลดหน้าเพจให้เสร็จ
         
         print("กำลังหาปุ่มสลับโปรไฟล์...")
-        if d(textContains="Switch").exists(timeout=3):
-            d(textContains="Switch").click()
-            print("สลับโปรไฟล์สำเร็จ (Switch)")
-            time.sleep(6)
-        elif d(textContains="สลับ").exists(timeout=3):
-            d(textContains="สลับ").click()
-            print("สลับโปรไฟล์สำเร็จ (สลับ)")
-            time.sleep(6)
-        else:
+        switched = False
+        switch_keywords = ["Switch", "switch", "สลับ"]
+        for kw in switch_keywords:
+            if d(textContains=kw).exists:
+                d(textContains=kw)[0].click()
+                switched = True
+                print(f"สลับโปรไฟล์สำเร็จ (พบข้อความ: {kw})")
+                time.sleep(8)
+                break
+            elif d(descriptionContains=kw).exists:
+                d(descriptionContains=kw)[0].click()
+                switched = True
+                print(f"สลับโปรไฟล์สำเร็จ (พบคำอธิบาย: {kw})")
+                time.sleep(8)
+                break
+                
+        if not switched:
             print("ไม่พบปุ่มสลับ อาจจะอยู่ในโปรไฟล์เพจอยู่แล้ว")
 
         # 1. เปิด Facebook ไปที่โพสต์โดยตรงผ่าน Deep Link

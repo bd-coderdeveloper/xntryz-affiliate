@@ -258,7 +258,11 @@ ipcMain.on("start-bot", () => {
 
 ipcMain.on("stop-bot", () => {
   if (botProcess) {
-    botProcess.kill();
+    if (process.platform === 'win32') {
+      require('child_process').exec(`taskkill /pid ${botProcess.pid} /T /F`);
+    } else {
+      botProcess.kill();
+    }
     botProcess = null;
     if (mainWindow) {
       mainWindow.webContents.send("bot-log", "SYSTEM: บังคับปิดการทำงานบอทเรียบร้อย...");
