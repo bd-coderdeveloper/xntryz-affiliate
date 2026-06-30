@@ -3,6 +3,7 @@ import os
 import uiautomator2 as u2
 from supabase import create_client, Client
 from dotenv import load_dotenv
+import sys
 
 # โหลดค่าจากไฟล์ .env
 load_dotenv()
@@ -10,16 +11,13 @@ load_dotenv()
 SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 
-import sys
-
 if not SUPABASE_URL or not SUPABASE_KEY:
     print("Error: Missing Supabase Environment Variables in .env file.")
     sys.exit(1)
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# ตั้งค่าการเชื่อมต่อ LDPlayer (หรือ Emulator เครื่องอื่นๆ)
-# โดยปกติ LDPlayer เครื่องแรกจะใช้ Port 5555 หรือ emulator-5554
+# ตั้งค่าการเชื่อมต่อ LDPlayer
 DEVICE_URL = "127.0.0.1:5555"
 d = None
 
@@ -33,16 +31,13 @@ def connect_device():
         print("ไม่สามารถเชื่อมต่ออุปกรณ์ได้:", e)
         sys.exit(1)
 
-def fetch_pending_task():
+def fetch_pending_tasks():
     try:
-        response = supabase.table('affiliate_tasks').select('*').eq('status', 'pending').order('created_at').limit(1).execute()
-        data = response.data
-        if data and len(data) > 0:
-            return data[0]
-        return None
+        response = supabase.table('affiliate_tasks').select('*').eq('status', 'pending').order('created_at').execute()
+        return response.data
     except Exception as e:
         print("Error fetching tasks:", e)
-        return None
+        return []
 
 def update_task_status(task_id, status, error_message=None):
     payload = {"status": status}
@@ -55,16 +50,79 @@ def update_task_status(task_id, status, error_message=None):
     except Exception as e:
         print("Error updating task:", e)
 
-def process_task(task):
-    print(f"กำลังรันคิวงาน: โพสต์ {task['post_id']} -> ลิงก์ {task['affiliate_link']}")
-    update_task_status(task['id'], 'processing')
+def add_product_flow(task):
+    # 3. ให้เลือก Manage Product
+    print("เลือก Manage Product...")
+    if d(textContains="Manage Product").exists(timeout=3):
+        d(textContains="Manage Product").click()
+    elif d(textContains="จัดการสินค้า").exists(timeout=3):
+        d(textContains="จัดการสินค้า").click()
+    else:
+        raise Exception("ไม่พบเมนู Manage Product (อาจคลิกปุ่ม 3 จุดผิดอัน)")
+        
+    time.sleep(3)
+    
+    # 4. เลือก Add affiliate product
+    print("เลือก Add affiliate product...")
+    if d(textContains="Add affiliate product").exists(timeout=3):
+        d(textContains="Add affiliate product").click()
+    elif d(textContains="เพิ่มสินค้า").exists(timeout=3):
+        d(textContains="เพิ่มสินค้า").click()
+    else:
+        raise Exception("ไม่พบเมนู Add affiliate product")
+        
+    time.sleep(3)
+    
+    # 5. ใส่ URL และ Link Name
+    print(f"กำลังพิมพ์ URL: {task['affiliate_link']}")
+    edit_texts = d(className="android.widget.EditText")
+    if edit_texts.exists and len(edit_texts) > 0:
+        # สมมติช่องแรกคือ URL
+        edit_texts[0].click()
+        d.clear_text()
+        edit_texts[0].set_text(task['affiliate_link'])
+        
+        # ถ้ามีช่องที่สอง ให้ใส่เป็น Link Name
+        if len(edit_texts) > 1:
+            edit_texts[1].click()
+            d.clear_text()
+            link_name = task.get('link_name')
+            if not link_name:
+                link_name = "สนใจสั่งซื้อคลิกที่นี่"
+            edit_texts[1].set_text(link_name)
+    else:
+        raise Exception("หาช่องกรอกข้อความไม่เจอ")
+        
+    time.sleep(2)
+    
+    # กดบันทึก (Save/Add)
+    if d(textContains="Add").exists(timeout=3):
+        d(textContains="Add").click()
+    elif d(textContains="Save").exists(timeout=3):
+        d(textContains="Save").click()
+    elif d(textContains="บันทึก").exists(timeout=3):
+        d(textContains="บันทึก").click()
+    elif d(textContains="เพิ่ม").exists(timeout=3):
+        d(textContains="เพิ่ม").click()
+        
+    print("จำลองการทำงานเพิ่มสินค้าเสร็จสิ้น")
+    time.sleep(3) 
+
+def process_tasks_for_page(page_id, tasks):
+    print(f"\n=== พบ {len(tasks)} คิวงานสำหรับเพจ {page_id} ===")
+    
+    # เปลี่ยนสถานะทั้งหมดเป็น processing ก่อนเริ่มทำ
+    for t in tasks:
+        update_task_status(t['id'], 'processing')
+        
+    target_tasks = { str(t['post_id']): t for t in tasks }
     
     try:
         if d is None:
             raise Exception("Device is not connected")
             
-        # 0. สลับโปรไฟล์ไปที่เพจ
-        url_page = f"fb://page/{task['page_id']}"
+        # 0. เปิด Timeline ของเพจ
+        url_page = f"fb://page/{page_id}"
         print(f"กำลังเปิดหน้าเพจเพื่อสลับโปรไฟล์: {url_page}")
         d.shell(f'am start -a android.intent.action.VIEW -d "{url_page}"')
         time.sleep(10) # รอโหลดหน้าเพจให้เสร็จ
@@ -89,107 +147,127 @@ def process_task(task):
         if not switched:
             print("ไม่พบปุ่มสลับ อาจจะอยู่ในโปรไฟล์เพจอยู่แล้ว")
 
-        # 1. เปิด Facebook ไปที่โพสต์โดยตรงผ่าน Deep Link
-        url = f"https://www.facebook.com/{task['page_id']}/posts/{task['post_id']}"
-        print(f"เปิด URL โพสต์: {url}")
-        d.shell(f'am start -a android.intent.action.VIEW -d "{url}"')
-        time.sleep(8) # รอโหลดหน้าโพสต์
+        print(f"\nกำลังเริ่มสแกนหน้า Timeline ของเพจ เพื่อหา {len(target_tasks)} โพสต์...")
+        max_scrolls = 200 # เลื่อนได้สูงสุด 200 ครั้ง
+        seen_urls = set()
         
-        # 2. กดปุ่ม 'จุดสามจุด' (Menu) ของโพสต์
-        print("กำลังค้นหาปุ่มจุดสามจุด...")
-        clicked_more = False
-        keywords = ["More", "more", "เพิ่มเติม", "ตัวเลือก", "Menu", "menu", "More options"]
-        
-        for kw in keywords:
-            if d(descriptionContains=kw).exists:
-                d(descriptionContains=kw)[0].click()
-                clicked_more = True
-                print(f"พบปุ่ม 3 จุด ({kw})")
+        for scroll_count in range(max_scrolls):
+            if not target_tasks:
+                print("✅ ประมวลผลครบทุกคิวงานของเพจนี้แล้ว!")
                 break
                 
-        if not clicked_more:
-            print("หาปุ่มจุดสามจุดไม่พบในหน้าแรก ลองปัดหน้าจอลงเล็กน้อย...")
-            d.swipe(500, 800, 500, 400) # เลื่อนหน้าจอลง
-            time.sleep(3)
-            for kw in keywords:
-                if d(descriptionContains=kw).exists:
-                    d(descriptionContains=kw)[0].click()
-                    clicked_more = True
-                    print(f"พบปุ่ม 3 จุด ({kw}) หลังเลื่อนจอ")
-                    break
+            print(f"สแกนรอบที่ {scroll_count+1}/{max_scrolls} (เหลืออีก {len(target_tasks)} โพสต์)")
+            
+            # หาปุ่ม Share
+            shares = d(text="Share")
+            if not shares.exists:
+                shares = d(descriptionContains="Share")
+                
+            if shares.exists:
+                try:
+                    # ลองกด Share อันแรกที่พบ
+                    shares[0].click(timeout=3)
+                    time.sleep(1.5)
                     
-        if not clicked_more:
-            print("ไม่พบปุ่มจุด 3 จุด (ข้ามการคลิกมั่วเพื่อป้องกันการเปิดวิดีโอ)")
-            raise Exception("ไม่พบปุ่มเมนู 3 จุดของโพสต์")
-        
-        time.sleep(3)
-        
-        # 3. ให้เลือก Manage Product
-        print("เลือก Manage Product...")
-        if d(textContains="Manage Product").exists(timeout=3):
-            d(textContains="Manage Product").click()
-        elif d(textContains="จัดการสินค้า").exists(timeout=3):
-            d(textContains="จัดการสินค้า").click()
+                    # กด Copy link
+                    copy_btn = d(text="Copy link")
+                    if not copy_btn.exists:
+                        copy_btn = d(descriptionContains="Copy link")
+                        
+                    if copy_btn.exists:
+                        copy_btn.click(timeout=3)
+                        time.sleep(1.5)
+                        
+                        # อ่าน Clipboard
+                        clip = d.clipboard
+                        
+                        # เช็คว่ามี post_id เป้าหมายซ่อนอยู่ใน link ไหม
+                        matched_pid = None
+                        for pid in target_tasks.keys():
+                            if pid in clip:
+                                matched_pid = pid
+                                break
+                                
+                        if matched_pid:
+                            print(f"🎯 เจอโพสต์เป้าหมายแล้ว! (Post ID: {matched_pid})")
+                            task = target_tasks[matched_pid]
+                            
+                            # หาปุ่ม 3 จุดของโพสต์นี้ (More options)
+                            more_btns = d(descriptionContains="More options")
+                            if not more_btns.exists:
+                                more_btns = d(descriptionContains="More")
+                            if not more_btns.exists:
+                                more_btns = d(descriptionContains="เพิ่มเติม")
+                            if not more_btns.exists:
+                                more_btns = d(descriptionContains="ตัวเลือก")
+                                
+                            if more_btns.exists:
+                                more_btns[0].click()
+                                time.sleep(2)
+                                
+                                try:
+                                    # เข้าสู่วงจรเพิ่มสินค้า
+                                    add_product_flow(task)
+                                    update_task_status(task['id'], 'completed')
+                                    print(f"✅ เพิ่มสินค้าให้โพสต์ {matched_pid} สำเร็จ")
+                                except Exception as e:
+                                    print(f"❌ เกิดข้อผิดพลาดในการแท็ก: {e}")
+                                    update_task_status(task['id'], 'failed', str(e))
+                                    d.press("back") # พยายามกดย้อนกลับเผื่อค้างอยู่ในหน้าต่าง
+                                    time.sleep(1)
+                                
+                                # ลบออกจากเป้าหมาย
+                                del target_tasks[matched_pid]
+                            else:
+                                print("⚠️ หาปุ่ม 3 จุดไม่เจอ ข้ามไปก่อน")
+                        else:
+                            if clip in seen_urls:
+                                # เจอลิงก์เดิมที่เคยเช็กแล้ว
+                                pass
+                            seen_urls.add(clip)
+                    else:
+                        print("⚠️ ไม่เจอปุ่ม Copy link ในเมนู Share กดย้อนกลับ")
+                        d.press("back")
+                        time.sleep(1)
+                        
+                except Exception as e:
+                    print(f"Error checking share: {e}")
+                    d.press("back") # พยายามกดย้อนกลับเผื่อค้าง
+                    time.sleep(1)
             
-        time.sleep(3)
-        
-        # 4. เลือก Add affiliate product
-        print("เลือก Add affiliate product...")
-        if d(textContains="Add affiliate product").exists(timeout=3):
-            d(textContains="Add affiliate product").click()
-        elif d(textContains="เพิ่มสินค้า").exists(timeout=3):
-            d(textContains="เพิ่มสินค้า").click()
+            # เลื่อนหน้าจอลงเพื่อเช็คโพสต์ถัดไป
+            d.swipe_ext("up", scale=0.6) 
+            time.sleep(2)
             
-        time.sleep(3)
-        
-        # 5. ใส่ URL และ Link Name
-        print(f"กำลังพิมพ์ URL: {task['affiliate_link']}")
-        edit_texts = d(className="android.widget.EditText")
-        if edit_texts.exists and len(edit_texts) > 0:
-            # สมมติช่องแรกคือ URL
-            edit_texts[0].click()
-            d.clear_text()
-            edit_texts[0].set_text(task['affiliate_link'])
-            
-            # ถ้ามีช่องที่สอง ให้ใส่เป็น Link Name
-            if len(edit_texts) > 1:
-                edit_texts[1].click()
-                d.clear_text()
-                link_name = task.get('link_name')
-                if not link_name:
-                    link_name = "สนใจสั่งซื้อคลิกที่นี่"
-                edit_texts[1].set_text(link_name)
-        else:
-            print("หาช่องกรอกข้อความไม่เจอ")
-            
-        time.sleep(2)
-        
-        # กดบันทึก (Save/Add)
-        if d(textContains="Add").exists(timeout=3):
-            d(textContains="Add").click()
-        elif d(textContains="Save").exists(timeout=3):
-            d(textContains="Save").click()
-        elif d(textContains="บันทึก").exists(timeout=3):
-            d(textContains="บันทึก").click()
-        elif d(textContains="เพิ่ม").exists(timeout=3):
-            d(textContains="เพิ่ม").click()
-        
-        print("จำลองการทำงานเสร็จสิ้น")
-        time.sleep(3) 
-        
-        update_task_status(task['id'], 'completed')
+        # ถ้าเลื่อนจนหมดโควต้าแล้วยังเหลือคิว
+        if target_tasks:
+            print(f"⚠️ สแกนจนครบ {max_scrolls} ครั้งแล้ว แต่ยังเหลือโพสต์ที่หาไม่เจออีก {len(target_tasks)} โพสต์")
+            for pid, task in target_tasks.items():
+                update_task_status(task['id'], 'failed', 'หาโพสต์ไม่พบบน Timeline (อาจอยู่ลึกเกินไป)')
+                
     except Exception as e:
-        print("เกิดข้อผิดพลาดในการแท็ก:", e)
-        update_task_status(task['id'], 'failed', str(e))
+        print("❌ เกิดข้อผิดพลาดรุนแรงในการสแกนเพจ:", e)
+        for pid, task in target_tasks.items():
+            update_task_status(task['id'], 'failed', str(e))
 
 def main():
     print("=== เริ่มการทำงาน FB Affiliate Bot ===")
     connect_device()
     
     while True:
-        task = fetch_pending_task()
-        if task:
-            process_task(task)
+        tasks = fetch_pending_tasks()
+        if tasks and len(tasks) > 0:
+            # จัดกลุ่มคิวงานตาม page_id
+            pages = {}
+            for t in tasks:
+                pid = t['page_id']
+                if pid not in pages:
+                    pages[pid] = []
+                pages[pid].append(t)
+                
+            # นำทางไปจัดการทีละเพจ
+            for page_id, page_tasks in pages.items():
+                process_tasks_for_page(page_id, page_tasks)
         else:
             # print("ไม่มีคิวงานใหม่ รอก่อน...")
             pass
