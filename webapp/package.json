@@ -2,6 +2,8 @@
   "name": "webapp",
   "version": "0.1.0",
   "private": true,
+  "repository": "https://github.com/bd-coderdeveloper/xntryz-affiliate",
+  "author": "bd-coderdeveloper",
   "main": "electron-main.js",
   "scripts": {
     "dev": "next dev",
