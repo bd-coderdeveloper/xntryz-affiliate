@@ -64,7 +64,7 @@ def process_task(task):
             raise Exception("Device is not connected")
             
         # 0. สลับโปรไฟล์ไปที่เพจ
-        url_page = f"https://www.facebook.com/{task['page_id']}"
+        url_page = f"fb://page/{task['page_id']}"
         print(f"กำลังเปิดหน้าเพจเพื่อสลับโปรไฟล์: {url_page}")
         d.shell(f'am start -a android.intent.action.VIEW -d "{url_page}"')
         time.sleep(10) # รอโหลดหน้าเพจให้เสร็จ
