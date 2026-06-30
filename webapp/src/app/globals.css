@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+@theme {
+  --color-orange-50: #fff8f1;
+  --color-orange-100: #ffefdb;
+  --color-orange-200: #ffdeb5;
+  --color-orange-300: #ffc482;
+  --color-orange-400: #ffa143;
+  --color-orange-500: #ff8515;
+  --color-orange-600: #f06a06;
+  --color-orange-700: #c75007;
+  --color-orange-800: #9e3f0e;
+  --color-orange-900: #7f360f;
+  --color-orange-950: #451905;
+
+  --color-dark-50: #e6e6e6;
+  --color-dark-100: #cccccc;
+  --color-dark-200: #b3b3b3;
+  --color-dark-300: #999999;
+  --color-dark-400: #808080;
+  --color-dark-500: #666666;
+  --color-dark-600: #4d4d4d;
+  --color-dark-700: #333333;
+  --color-dark-800: #1a1a1a;
+  --color-dark-900: #0d0d0d;
+  --color-dark-950: #060606;
+}
+
+@layer base {
+  :root {
+    --background: var(--color-dark-950);
+    --foreground: var(--color-dark-50);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    @apply antialiased selection:bg-orange-500/30 selection:text-orange-200;
+  }
+}
+
+.glass-panel {
+  @apply bg-dark-900/40 backdrop-blur-xl border border-dark-800/50 shadow-2xl;
+}
+
+.input-primary {
+  @apply w-full bg-dark-800/50 border border-dark-700 text-dark-50 rounded-lg px-4 py-3 placeholder:text-dark-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all duration-300;
+}
+
+.btn-primary {
+  @apply w-full bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold rounded-lg px-4 py-3 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 transform hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.98];
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom Scrollbar Styles */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-dark-700);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-orange-500);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Universal scrollbar style for elements that don't explicitly use .custom-scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-dark-950);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-dark-700);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-orange-500);
+}
+
+/* Fix text cursor showing up on Range Sliders */
+input[type="range"] {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  cursor: pointer;
+}
