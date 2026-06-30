@@ -18,7 +18,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     statusDiv.textContent = 'กำลังดึงข้อมูล Token...';
     
     // 1. Fetch EAAB Token จาก Business Facebook
-    const res = await fetch('https://business.facebook.com/content_management');
+    const res = await fetch('https://business.facebook.com/content_management', {
+      credentials: 'include'
+    });
     const html = await res.text();
     
     const match = html.match(/(EAAB[a-zA-Z0-9_\-\\]{15,})/);
