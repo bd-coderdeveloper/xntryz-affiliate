@@ -1,6 +1,6 @@
 {
   "name": "webapp",
-  "version": "1.0.21",
+  "version": "1.0.22",
   "private": true,
   "repository": "https://github.com/bd-coderdeveloper/xntryz-affiliate",
   "author": "bd-coderdeveloper",
@@ -31,8 +31,8 @@
     ],
     "extraResources": [
       {
-        "from": "env.txt",
-        "to": "env.txt"
+        "from": ".env.production",
+        "to": ".env.production"
       },
       {
         "from": ".next/standalone",

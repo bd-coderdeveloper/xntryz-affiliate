@@ -213,7 +213,7 @@ ipcMain.on("start-bot", () => {
   // Load environment variables to pass to bot
   const envPath = isDev 
     ? path.join(__dirname, ".env.local")
-    : path.join(process.resourcesPath, "env.txt");
+    : path.join(process.resourcesPath, ".env.production");
     
   let botEnv = { ...process.env, PYTHONIOENCODING: 'utf-8' };
   if (fs.existsSync(envPath)) {
@@ -224,6 +224,10 @@ ipcMain.on("start-bot", () => {
         botEnv[match[1].trim()] = match[2].trim();
       }
     });
+  } else {
+    if (mainWindow) {
+      mainWindow.webContents.send("server-log", `ERROR: Missing env file at ${envPath}`);
+    }
   }
 
   botProcess = spawn(botExePath, [], { env: botEnv });
