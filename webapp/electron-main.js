@@ -21,7 +21,10 @@ function createWindow() {
     autoHideMenuBar: true,
   });
 
-  mainWindow.loadFile("launcher-gui.html");
+  mainWindow.loadFile("launcher-gui.html").then(() => {
+    mainWindow.webContents.send('set-version', app.getVersion());
+    startNextJsServer();
+  });
 
   mainWindow.on("closed", function () {
     mainWindow = null;
@@ -85,11 +88,6 @@ function startNextJsServer() {
 
 app.on("ready", () => {
   createWindow();
-
-  mainWindow.webContents.on('did-finish-load', () => {
-    mainWindow.webContents.send('set-version', app.getVersion());
-    startNextJsServer();
-  });
 
   // Auto Updater logic
   autoUpdater.checkForUpdatesAndNotify();
