@@ -222,8 +222,11 @@ def process_tasks_for_page(page_id, tasks):
                                 print("⚠️ หาปุ่ม 3 จุดไม่เจอ ข้ามไปก่อน")
                         else:
                             if clip in seen_urls:
-                                # เจอลิงก์เดิมที่เคยเช็กแล้ว
-                                pass
+                                print("เจอโพสต์เดิมซ้ำ! กำลังพยายามเลื่อนหน้าจอให้มากขึ้น...")
+                                # เลื่อนหน้าจอแรงๆ เพื่อให้พ้นโพสต์เดิม
+                                d.swipe(500, 1500, 500, 300, duration=0.2)
+                                time.sleep(1)
+                                d.swipe(500, 1500, 500, 300, duration=0.2)
                             seen_urls.add(clip)
                     else:
                         print("⚠️ ไม่เจอปุ่ม Copy link ในเมนู Share กดย้อนกลับ")
@@ -235,9 +238,10 @@ def process_tasks_for_page(page_id, tasks):
                     d.press("back") # พยายามกดย้อนกลับเผื่อค้าง
                     time.sleep(1)
             
-            # เลื่อนหน้าจอลงเพื่อเช็คโพสต์ถัดไป
-            d.swipe_ext("up", scale=0.6) 
-            time.sleep(2)
+            # เลื่อนหน้าจอลงตามปกติเพื่อเช็คโพสต์ถัดไป
+            # ใช้พิกัดที่มั่นใจว่าลากจากจอล่างขึ้นไปจอบน (เพื่อดูโพสต์เก่า)
+            d.swipe(500, 1200, 500, 400, duration=0.3)
+            time.sleep(1.5)
             
         # ถ้าเลื่อนจนหมดโควต้าแล้วยังเหลือคิว
         if target_tasks:
