@@ -238,6 +238,8 @@
       } else if (msg.includes('SYSTEM:') || msg.includes('BOT SYSTEM:')) {
         line.style.color = '#ebcb8b'; // Yellow for system
         line.style.fontWeight = 'bold';
+      } else if (msg.includes('WARNING:')) {
+        line.style.color = '#d08770'; // Orange for warnings
       } else if (msg.includes('SYSTEM ERROR:')) {
         line.classList.add('log-error');
         line.style.fontWeight = 'bold';

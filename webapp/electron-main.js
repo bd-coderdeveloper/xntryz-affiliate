@@ -73,9 +73,16 @@ function startNextJsServer() {
 
   serverProcess.stderr.on("data", (data) => {
     const msg = data.toString();
-    console.error(`[Next.js Error] ${msg}`);
-    if (mainWindow) {
-      mainWindow.webContents.send("server-log", `ERROR: ${msg}`);
+    if (msg.toLowerCase().includes("deprecated") || msg.toLowerCase().includes("warning")) {
+      console.warn(`[Next.js Warning] ${msg}`);
+      if (mainWindow) {
+        mainWindow.webContents.send("server-log", `WARNING: ${msg}`);
+      }
+    } else {
+      console.error(`[Next.js Error] ${msg}`);
+      if (mainWindow) {
+        mainWindow.webContents.send("server-log", `ERROR: ${msg}`);
+      }
     }
   });
 
