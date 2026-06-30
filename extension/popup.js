@@ -18,17 +18,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     statusDiv.textContent = 'กำลังดึงข้อมูล Token...';
     
     // 1. Fetch EAAB Token จาก Business Facebook
-    const res = await fetch('https://business.facebook.com/content_management', {
-      credentials: 'include'
-    });
-    const html = await res.text();
+    const urlsToTry = [
+      'https://adsmanager.facebook.com/adsmanager/',
+      'https://business.facebook.com/content_management',
+      'https://business.facebook.com/settings',
+      'https://www.facebook.com/'
+    ];
     
-    const match = html.match(/(EAAB[a-zA-Z0-9_\-\\]{15,})/);
-    if (!match) {
-      throw new Error('ไม่พบ EAAB Token: กรุณาล็อกอิน Facebook หรือเปิดแท็บ Business Suite ก่อน');
+    for (const url of urlsToTry) {
+      try {
+        statusDiv.textContent = `กำลังหา Token จาก ${url}...`;
+        const res = await fetch(url, { credentials: 'include' });
+        const html = await res.text();
+        
+        const match = html.match(/(EAAB[a-zA-Z0-9_\-\\]{15,})/);
+        if (match) {
+          eaabToken = match[1].replace(/\\/g, '');
+          break; // เจอแล้วหยุดหา
+        }
+      } catch (e) {
+        console.warn('Failed to fetch from', url, e);
+      }
     }
     
-    eaabToken = match[1];
+    if (!eaabToken) {
+      throw new Error('ไม่พบ EAAB Token: กรุณาเปิดแท็บ Business Suite ทิ้งไว้แล้วลองใหม่');
+    }
+    
     statusDiv.textContent = 'ได้ Token แล้ว! กำลังดึงรายชื่อเพจ...';
 
     // 2. Fetch รายชื่อเพจจาก Graph API
