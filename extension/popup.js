@@ -86,6 +86,7 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
   const startDateStr = document.getElementById('startDate').value;
   const endDateStr = document.getElementById('endDate').value;
   const affiliateLink = document.getElementById('affiliateLink').value.trim();
+  const linkName = document.getElementById('linkName').value.trim();
   const statusDiv = document.getElementById('status');
   
   if (!affiliateLink) {
@@ -170,7 +171,8 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
             page_id: pageId,
             post_id: actualPostId,
             post_url: post.permalink_url || `https://www.facebook.com/${actualPostId}`,
-            affiliate_link: affiliateLink
+            affiliate_link: affiliateLink,
+            link_name: linkName
           })
         });
         

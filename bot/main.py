@@ -114,7 +114,10 @@ def process_task(task):
             if len(edit_texts) > 1:
                 edit_texts[1].click()
                 d.clear_text()
-                edit_texts[1].set_text("สนใจสั่งซื้อคลิกที่นี่")
+                link_name = task.get('link_name')
+                if not link_name:
+                    link_name = "สนใจสั่งซื้อคลิกที่นี่"
+                edit_texts[1].set_text(link_name)
         else:
             print("หาช่องกรอกข้อความไม่เจอ")
             

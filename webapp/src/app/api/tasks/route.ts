@@ -10,7 +10,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { page_id, post_id, affiliate_link, post_url } = body;
+    const { page_id, post_id, affiliate_link, post_url, link_name } = body;
 
     if (!post_id || !affiliate_link) {
       return NextResponse.json(
@@ -25,7 +25,8 @@ export async function POST(request: Request) {
         page_id: page_id || 'UNKNOWN_PAGE',
         post_id,
         affiliate_link,
-        post_url: post_url || ''
+        post_url: post_url || '',
+        link_name: link_name || null
       });
 
     if (error) {
