@@ -63,31 +63,76 @@ def process_task(task):
         if d is None:
             raise Exception("Device is not connected")
             
-        # 1. เปิด Facebook ไปที่โพสต์โดยตรงผ่าน Deep Link (Intent)
+        # 1. เปิด Facebook ไปที่โพสต์โดยตรงผ่าน Deep Link
         url = f"https://www.facebook.com/{task['page_id']}/posts/{task['post_id']}"
         print(f"เปิด URL: {url}")
         d.shell(f'am start -a android.intent.action.VIEW -d "{url}"')
-        time.sleep(5) # รอโหลดหน้าโพสต์
+        time.sleep(8) # รอโหลดหน้าโพสต์
         
-        # 2. กดปุ่ม 'จุดสามจุด' (Menu) ของโพสต์ (อาจจะต้องหา selector ที่เหมาะสมกับเวอร์ชัน)
-        # ตัวอย่าง: หาปุ่มที่มี description ว่า "More options" หรือ text ว่า "เพิ่มเติม"
-        print("กำลังค้นหาปุ่มเมนูโพสต์...")
-        # d(descriptionContains="More").click()
+        # 2. กดปุ่ม 'จุดสามจุด' (Menu) ของโพสต์
+        print("กำลังค้นหาปุ่มจุดสามจุด...")
+        if d(descriptionContains="More").exists(timeout=3):
+            d(descriptionContains="More").click()
+        elif d(descriptionContains="เพิ่มเติม").exists(timeout=3):
+            d(descriptionContains="เพิ่มเติม").click()
+        elif d(description="More options").exists(timeout=3):
+            d(description="More options").click()
+        else:
+            print("หาปุ่มจุดสามจุดไม่พบ ลองกดแบบสุ่มตำแหน่ง...")
+            d.click(950, 150) # เดาตำแหน่งมุมขวาบนของจอ
         
-        # 3. กด 'แก้ไขโพสต์' (Edit Post)
-        # d(textContains="แก้ไข").click()
+        time.sleep(3)
         
-        # 4. พิมพ์ลิงก์หรือแท็กสินค้า
-        # (แก้ไขตามความต้องการของบอทว่าจะใส่ affiliate_link เข้าไปแบบไหน)
-        # d(textContains="แก้ไขโพสต์").send_keys(task['affiliate_link'])
+        # 3. ให้เลือก Manage Product
+        print("เลือก Manage Product...")
+        if d(textContains="Manage Product").exists(timeout=3):
+            d(textContains="Manage Product").click()
+        elif d(textContains="จัดการสินค้า").exists(timeout=3):
+            d(textContains="จัดการสินค้า").click()
+            
+        time.sleep(3)
         
-        # 5. กดบันทึก
-        # d(textContains="บันทึก").click()
+        # 4. เลือก Add affiliate product
+        print("เลือก Add affiliate product...")
+        if d(textContains="Add affiliate product").exists(timeout=3):
+            d(textContains="Add affiliate product").click()
+        elif d(textContains="เพิ่มสินค้า").exists(timeout=3):
+            d(textContains="เพิ่มสินค้า").click()
+            
+        time.sleep(3)
         
-        print("จำลองการทำงานเสร็จสิ้น (ต้องแก้ Selector ให้ตรงกับแอพจริง)")
-        time.sleep(3) # จำลองใช้เวลา 3 วินาที
+        # 5. ใส่ URL และ Link Name
+        print(f"กำลังพิมพ์ URL: {task['affiliate_link']}")
+        edit_texts = d(className="android.widget.EditText")
+        if edit_texts.exists and len(edit_texts) > 0:
+            # สมมติช่องแรกคือ URL
+            edit_texts[0].click()
+            d.clear_text()
+            edit_texts[0].set_text(task['affiliate_link'])
+            
+            # ถ้ามีช่องที่สอง ให้ใส่เป็น Link Name
+            if len(edit_texts) > 1:
+                edit_texts[1].click()
+                d.clear_text()
+                edit_texts[1].set_text("สนใจสั่งซื้อคลิกที่นี่")
+        else:
+            print("หาช่องกรอกข้อความไม่เจอ")
+            
+        time.sleep(2)
         
-        # สมมติว่าทำงานสำเร็จ
+        # กดบันทึก (Save/Add)
+        if d(textContains="Add").exists(timeout=3):
+            d(textContains="Add").click()
+        elif d(textContains="Save").exists(timeout=3):
+            d(textContains="Save").click()
+        elif d(textContains="บันทึก").exists(timeout=3):
+            d(textContains="บันทึก").click()
+        elif d(textContains="เพิ่ม").exists(timeout=3):
+            d(textContains="เพิ่ม").click()
+        
+        print("จำลองการทำงานเสร็จสิ้น")
+        time.sleep(3) 
+        
         update_task_status(task['id'], 'completed')
     except Exception as e:
         print("เกิดข้อผิดพลาดในการแท็ก:", e)
