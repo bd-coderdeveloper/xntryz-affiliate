@@ -210,8 +210,11 @@ ipcMain.on("start-bot", () => {
     return;
   }
 
-  // Load .env.local variables to pass to bot
-  const envPath = path.join(__dirname, ".env.local");
+  // Load environment variables to pass to bot
+  const envPath = isDev 
+    ? path.join(__dirname, ".env.local")
+    : path.join(process.resourcesPath, "env.txt");
+    
   let botEnv = { ...process.env, PYTHONIOENCODING: 'utf-8' };
   if (fs.existsSync(envPath)) {
     const envContent = fs.readFileSync(envPath, 'utf8');
