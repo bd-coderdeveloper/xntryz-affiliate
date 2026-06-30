@@ -58,12 +58,34 @@ def process_task(task):
     update_task_status(task['id'], 'processing')
     
     try:
-        # TODO: ใส่โค้ดสั่งการ UIAutomator ตรงนี้
-        # ตัวอย่างจำลองการทำงาน
-        # d.app_start('com.facebook.katana')
-        # ... d(text="...").click() ...
+        if d is None:
+            raise Exception("Device is not connected")
+            
+        # 1. เปิด Facebook ไปที่โพสต์โดยตรงผ่าน Deep Link (Intent)
+        url = f"https://www.facebook.com/{task['page_id']}/posts/{task['post_id']}"
+        print(f"เปิด URL: {url}")
+        d.shell(f'am start -a android.intent.action.VIEW -d "{url}"')
+        time.sleep(5) # รอโหลดหน้าโพสต์
         
-        print("จำลองการทำงานเสร็จสิ้น (ยังไม่ได้เขียน Logic กดยิงจริงๆ)")
+        # 2. กดปุ่ม 'จุดสามจุด' (Menu) ของโพสต์ (อาจจะต้องหา selector ที่เหมาะสมกับเวอร์ชัน)
+        # ตัวอย่าง: หาปุ่มที่มี description ว่า "More options" หรือ text ว่า "เพิ่มเติม"
+        print("กำลังค้นหาปุ่มเมนูโพสต์...")
+        # d(descriptionContains="More").click()
+        
+        # 3. กด 'แก้ไขโพสต์' (Edit Post)
+        # d(textContains="แก้ไข").click()
+        
+        # 4. กดปุ่ม 'แท็กสินค้า' (Tag Products)
+        # d(textContains="แท็กสินค้า").click()
+        
+        # 5. พิมพ์รหัสสินค้าและเลือก
+        # d(resourceId="com.facebook.katana:id/search_box").send_keys(task['product_id'])
+        # d(textContains=task['product_id']).click()
+        
+        # 6. กดบันทึก
+        # d(textContains="บันทึก").click()
+        
+        print("จำลองการทำงานเสร็จสิ้น (ต้องแก้ Selector ให้ตรงกับแอพจริง)")
         time.sleep(3) # จำลองใช้เวลา 3 วินาที
         
         # สมมติว่าทำงานสำเร็จ

@@ -6,6 +6,9 @@ on:
       - 'v*' # ทำงานอัตโนมัติเมื่อมีการ push tag ที่ขึ้นต้นด้วย v (เช่น v1.0.0)
   workflow_dispatch: # อนุญาตให้กดสั่ง Build แบบ Manual ผ่านหน้าเว็บ GitHub ได้
 
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: windows-latest
