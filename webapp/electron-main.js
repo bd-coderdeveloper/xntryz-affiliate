@@ -16,7 +16,7 @@ function createWindow() {
       nodeIntegration: true,
       contextIsolation: false,
     },
-    title: "FB Affiliate System Launcher",
+    title: "BD FB Affiliate Launcher",
     icon: path.join(__dirname, "upfeed_logo.png"),
     autoHideMenuBar: true,
   });

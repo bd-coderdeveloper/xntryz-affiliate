@@ -4,172 +4,172 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BD FB Affiliate Launcher/title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
-      rel="stylesheet">
-    <style>
-      :root {
-        --bg: #0f172a;
-        --card-bg: rgba(30, 41, 59, 0.7);
-        --text: #f8fafc;
-        --text-muted: #94a3b8;
-        --primary: #3b82f6;
-        --primary-hover: #2563eb;
-        --danger: #ef4444;
-        --danger-hover: #dc2626;
-        --success: #10b981;
-      }
+  <title>BD FB Affiliate Launcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --success: #10b981;
+    }
 
-      body {
-        margin: 0;
-        padding: 0;
-        font-family: 'Kanit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-        color: var(--text);
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-      }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Kanit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-      .container {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        padding: 20px;
-        box-sizing: border-box;
-      }
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 20px;
+      box-sizing: border-box;
+    }
 
-      .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        padding: 15px 20px;
-        background: var(--card-bg);
-        border-radius: 12px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 15px 20px;
+      background: var(--card-bg);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
 
-      .title-group {
-        display: flex;
-        flex-direction: column;
-      }
+    .title-group {
+      display: flex;
+      flex-direction: column;
+    }
 
-      h1 {
-        margin: 0;
-        font-size: 24px;
-        font-weight: 600;
-        background: linear-gradient(to right, #60a5fa, #a78bfa);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      background: linear-gradient(to right, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-      .status {
-        display: flex;
-        align-items: center;
-        margin-top: 4px;
-        font-size: 14px;
-        color: var(--text-muted);
-      }
+    .status {
+      display: flex;
+      align-items: center;
+      margin-top: 4px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
 
-      .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background-color: var(--success);
-        margin-right: 8px;
-        box-shadow: 0 0 8px var(--success);
-      }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--success);
+      margin-right: 8px;
+      box-shadow: 0 0 8px var(--success);
+    }
 
-      .actions {
-        display: flex;
-        gap: 12px;
-      }
+    .actions {
+      display: flex;
+      gap: 12px;
+    }
 
-      button {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        color: white;
-      }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: white;
+    }
 
-      .btn-primary {
-        background-color: var(--primary);
-        box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
-      }
+    .btn-primary {
+      background-color: var(--primary);
+      box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+    }
 
-      .btn-primary:hover {
-        background-color: var(--primary-hover);
-        transform: translateY(-1px);
-      }
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-1px);
+    }
 
-      .btn-danger {
-        background-color: rgba(239, 68, 68, 0.2);
-        color: var(--danger);
-        border: 1px solid rgba(239, 68, 68, 0.5);
-      }
+    .btn-danger {
+      background-color: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+    }
 
-      .btn-danger:hover {
-        background-color: var(--danger);
-        color: white;
-      }
+    .btn-danger:hover {
+      background-color: var(--danger);
+      color: white;
+    }
 
-      .terminal {
-        flex: 1;
-        background: #000;
-        border-radius: 12px;
-        padding: 15px;
-        overflow-y: auto;
-        font-family: 'Kanit', 'Consolas', 'Courier New', monospace;
-        font-size: 13px;
-        line-height: 1.5;
-        color: #a3be8c;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.5);
-      }
+    .terminal {
+      flex: 1;
+      background: #000;
+      border-radius: 12px;
+      padding: 15px;
+      overflow-y: auto;
+      font-family: 'Kanit', 'Consolas', 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #a3be8c;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+    }
 
-      .log-line {
-        margin: 0;
-        word-wrap: break-word;
-      }
+    .log-line {
+      margin: 0;
+      word-wrap: break-word;
+    }
 
-      .log-error {
-        color: #bf616a;
-      }
+    .log-error {
+      color: #bf616a;
+    }
 
-      .log-info {
-        color: #88c0d0;
-      }
+    .log-info {
+      color: #88c0d0;
+    }
 
-      /* Scrollbar styling */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
 
-      ::-webkit-scrollbar-track {
-        background: #000;
-        border-radius: 8px;
-      }
+    ::-webkit-scrollbar-track {
+      background: #000;
+      border-radius: 8px;
+    }
 
-      ::-webkit-scrollbar-thumb {
-        background: #4c566a;
-        border-radius: 8px;
-      }
+    ::-webkit-scrollbar-thumb {
+      background: #4c566a;
+      border-radius: 8px;
+    }
 
-      ::-webkit-scrollbar-thumb:hover {
-        background: #434c5e;
-      }
-    </style>
+    ::-webkit-scrollbar-thumb:hover {
+      background: #434c5e;
+    }
+  </style>
 </head>
 
 <body>

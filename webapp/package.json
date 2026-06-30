@@ -1,6 +1,6 @@
 {
   "name": "webapp",
-  "version": "0.1.0",
+  "version": "1.0.8",
   "private": true,
   "repository": "https://github.com/bd-coderdeveloper/xntryz-affiliate",
   "author": "bd-coderdeveloper",
@@ -16,7 +16,7 @@
   },
   "build": {
     "appId": "com.upfeedth.affiliatesystem",
-    "productName": "FB Affiliate System",
+    "productName": "BD FB Affiliate",
     "publish": {
       "provider": "github"
     },
