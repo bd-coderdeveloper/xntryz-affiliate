@@ -47,9 +47,17 @@ function startNextJsServer() {
     PORT: PORT.toString(),
     HOSTNAME: "localhost",
     NODE_ENV: "production",
+    ELECTRON_RUN_AS_NODE: "1"
   };
 
-  serverProcess = spawn("node", [serverPath], { env });
+  serverProcess = spawn(process.execPath, [serverPath], { env });
+
+  serverProcess.on("error", (err) => {
+    console.error(`Failed to start server: ${err.message}`);
+    if (mainWindow) {
+      mainWindow.webContents.send("server-log", `SYSTEM ERROR: Failed to start server: ${err.message}`);
+    }
+  });
 
   serverProcess.stdout.on("data", (data) => {
     const msg = data.toString();
