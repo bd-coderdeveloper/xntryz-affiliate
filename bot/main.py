@@ -10,9 +10,11 @@ load_dotenv()
 SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 
+import sys
+
 if not SUPABASE_URL or not SUPABASE_KEY:
     print("Error: Missing Supabase Environment Variables in .env file.")
-    exit(1)
+    sys.exit(1)
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -29,7 +31,7 @@ def connect_device():
         print("เชื่อมต่ออุปกรณ์สำเร็จ:", d.device_info)
     except Exception as e:
         print("ไม่สามารถเชื่อมต่ออุปกรณ์ได้:", e)
-        exit(1)
+        sys.exit(1)
 
 def fetch_pending_task():
     try:

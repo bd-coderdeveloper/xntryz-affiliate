@@ -1,6 +1,6 @@
 {
   "name": "webapp",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "private": true,
   "repository": "https://github.com/bd-coderdeveloper/xntryz-affiliate",
   "author": "bd-coderdeveloper",
@@ -27,7 +27,8 @@
     "files": [
       "launcher-gui.html",
       "electron-main.js",
-      "upfeed_logo.png"
+      "upfeed_logo.png",
+      ".env.local"
     ],
     "extraResources": [
       {
