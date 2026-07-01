@@ -62,6 +62,38 @@ export default function TaskQueuePage() {
     setIsAdding(false);
   };
 
+  const handleResetFailed = async () => {
+    if (!confirm('คุณต้องการรีเซ็ตคิวงานที่ "ล้มเหลว" ให้กลับมา "รอดำเนินการ" ใหม่ทั้งหมดหรือไม่?')) return;
+    
+    setLoading(true);
+    const { error } = await supabase
+      .from('affiliate_tasks')
+      .update({ status: 'pending', error_message: null })
+      .eq('status', 'failed');
+      
+    if (error) {
+      alert(`Error: ${error.message}`);
+    } else {
+      fetchTasks();
+    }
+  };
+
+  const handleClearCompleted = async () => {
+    if (!confirm('คุณต้องการลบประวัติคิวงานที่ "สำเร็จแล้ว" ทั้งหมดหรือไม่?')) return;
+    
+    setLoading(true);
+    const { error } = await supabase
+      .from('affiliate_tasks')
+      .delete()
+      .eq('status', 'completed');
+      
+    if (error) {
+      alert(`Error: ${error.message}`);
+    } else {
+      fetchTasks();
+    }
+  };
+
   return (
     <div className="p-8 pb-20 font-sans">
       <div className="flex flex-col gap-8 max-w-5xl mx-auto">
@@ -71,10 +103,20 @@ export default function TaskQueuePage() {
             <h1 className="text-3xl font-bold text-white mb-2">Task Queue</h1>
             <p className="text-dark-300">จัดการคิวงานสำหรับ Bot อัตโนมัติ</p>
           </div>
-          <button onClick={fetchTasks} className="btn-primary px-4 py-2 flex items-center gap-2">
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            รีเฟรช
-          </button>
+          <div className="flex items-center gap-3">
+            <button onClick={handleResetFailed} className="bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 transition-colors px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium border border-orange-500/30">
+              <RefreshCw className="w-4 h-4" />
+              รีเซ็ตงานที่ล้มเหลว
+            </button>
+            <button onClick={handleClearCompleted} className="bg-dark-800 text-dark-300 hover:text-white hover:bg-dark-700 transition-colors px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium border border-dark-700">
+              <XCircle className="w-4 h-4" />
+              ล้างประวัติที่สำเร็จแล้ว
+            </button>
+            <button onClick={fetchTasks} className="btn-primary px-4 py-2 flex items-center gap-2">
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              รีเฟรช
+            </button>
+          </div>
         </div>
 
         {/* Add Task Box */}
