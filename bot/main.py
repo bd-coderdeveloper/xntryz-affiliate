@@ -60,14 +60,26 @@ def update_task_status(task_id, status, error_message=None):
 def add_product_flow(task):
     # 3. ให้เลือก Manage Product
     print("เลือก Manage Product...")
+    
+    # รองรับทั้งแบบที่ข้อความอยู่ใน text และอยู่ใน description (React Native UI มักจะเอาไว้ใน description)
+    btn = None
     if d(textContains="Manage Product").exists(timeout=3):
-        d(textContains="Manage Product").click()
-    elif d(textContains="Manage products").exists(timeout=3):
-        d(textContains="Manage products").click()
-    elif d(textContains="จัดการสินค้า").exists(timeout=3):
-        d(textContains="จัดการสินค้า").click()
+        btn = d(textContains="Manage Product")
+    elif d(descriptionContains="Manage Product").exists(timeout=1):
+        btn = d(descriptionContains="Manage Product")
+    elif d(textContains="Manage products").exists(timeout=1):
+        btn = d(textContains="Manage products")
+    elif d(descriptionContains="Manage products").exists(timeout=1):
+        btn = d(descriptionContains="Manage products")
+    elif d(textContains="จัดการสินค้า").exists(timeout=1):
+        btn = d(textContains="จัดการสินค้า")
+    elif d(descriptionContains="จัดการสินค้า").exists(timeout=1):
+        btn = d(descriptionContains="จัดการสินค้า")
+        
+    if btn:
+        btn.click()
     else:
-        raise Exception("ไม่พบเมนู Manage Product ในโพสต์นี้")
+        raise Exception("ไม่พบเมนู Manage Product ในโพสต์นี้ (อาจจะหาจาก UI Text/Description ไม่เจอ)")
         
     time.sleep(3)
     
@@ -171,11 +183,11 @@ def process_tasks_for_page(page_id, page_tasks):
             
             # ลองเช็คก่อนว่ามีปุ่ม "Manage Product" โชว์อยู่บนหน้าจอเลยหรือไม่ (บางที Reels โชว์ปุ่มนี้เลยโดยไม่ต้องกด 3 จุด)
             direct_manage = False
-            if d(textContains="Manage Product").exists:
+            if d(textContains="Manage Product").exists or d(descriptionContains="Manage Product").exists:
                 direct_manage = True
-            elif d(textContains="Manage products").exists:
+            elif d(textContains="Manage products").exists or d(descriptionContains="Manage products").exists:
                 direct_manage = True
-            elif d(textContains="จัดการสินค้า").exists:
+            elif d(textContains="จัดการสินค้า").exists or d(descriptionContains="จัดการสินค้า").exists:
                 direct_manage = True
                 
             if direct_manage:
