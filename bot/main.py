@@ -158,21 +158,30 @@ def process_tasks_for_page(page_id, tasks):
                 
             print(f"สแกนรอบที่ {scroll_count+1}/{max_scrolls} (เหลืออีก {len(target_tasks)} โพสต์)")
             
-            # หาปุ่ม Share
-            shares = d(text="Share")
+            # หาปุ่ม Share แบบเจาะจง เพื่อป้องกันการไปโดนปุ่ม "Share now" ในเมนู
+            shares = d(text="Share", className="android.view.ViewGroup")
             if not shares.exists:
-                shares = d(descriptionContains="Share")
+                shares = d(text="แชร์", className="android.view.ViewGroup")
+            if not shares.exists:
+                # ถ้าหาด้วย text ไม่เจอ ลองหาด้วย description ที่เป็นคำว่า Share หรือ แชร์ โดดๆ
+                shares = d(description="Share")
+            if not shares.exists:
+                shares = d(description="แชร์")
                 
             if shares.exists:
                 try:
                     # ลองกด Share อันแรกที่พบ
                     shares[0].click(timeout=3)
-                    time.sleep(1.5)
+                    time.sleep(2)
                     
-                    # กด Copy link
+                    # กด Copy link (รองรับทั้งภาษาอังกฤษและไทย)
                     copy_btn = d(text="Copy link")
                     if not copy_btn.exists:
+                        copy_btn = d(text="คัดลอกลิงก์")
+                    if not copy_btn.exists:
                         copy_btn = d(descriptionContains="Copy link")
+                    if not copy_btn.exists:
+                        copy_btn = d(descriptionContains="คัดลอกลิงก์")
                         
                     if copy_btn.exists:
                         copy_btn.click(timeout=3)
@@ -214,7 +223,7 @@ def process_tasks_for_page(page_id, tasks):
                                     print(f"❌ เกิดข้อผิดพลาดในการแท็ก: {e}")
                                     update_task_status(task['id'], 'failed', str(e))
                                     d.press("back") # พยายามกดย้อนกลับเผื่อค้างอยู่ในหน้าต่าง
-                                    time.sleep(1)
+                                    time.sleep(1.5)
                                 
                                 # ลบออกจากเป้าหมาย
                                 del target_tasks[matched_pid]
@@ -225,18 +234,18 @@ def process_tasks_for_page(page_id, tasks):
                                 print("เจอโพสต์เดิมซ้ำ! กำลังพยายามเลื่อนหน้าจอให้มากขึ้น...")
                                 # เลื่อนหน้าจอแรงๆ เพื่อให้พ้นโพสต์เดิม
                                 d.swipe(500, 1500, 500, 300, duration=0.2)
-                                time.sleep(1)
+                                time.sleep(1.5)
                                 d.swipe(500, 1500, 500, 300, duration=0.2)
                             seen_urls.add(clip)
                     else:
                         print("⚠️ ไม่เจอปุ่ม Copy link ในเมนู Share กดย้อนกลับ")
                         d.press("back")
-                        time.sleep(1)
+                        time.sleep(1.5)
                         
                 except Exception as e:
                     print(f"Error checking share: {e}")
                     d.press("back") # พยายามกดย้อนกลับเผื่อค้าง
-                    time.sleep(1)
+                    time.sleep(1.5)
             
             # เลื่อนหน้าจอลงตามปกติเพื่อเช็คโพสต์ถัดไป
             # ใช้พิกัดที่มั่นใจว่าลากจากจอล่างขึ้นไปจอบน (เพื่อดูโพสต์เก่า)
