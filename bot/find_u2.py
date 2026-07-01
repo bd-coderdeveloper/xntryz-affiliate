@@ -1,0 +1,1 @@
+import os, glob, uiautomator2; dir_path = os.path.dirname(uiautomator2.__file__); print(" Dir path:\, dir_path); files = glob.glob(os.path.join(dir_path, \**\, \*.py\), recursive=True); print(\Files:\, len(files));

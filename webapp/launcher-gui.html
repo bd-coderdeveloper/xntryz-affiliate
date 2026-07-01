@@ -179,7 +179,7 @@
         <h1>BD FB Affiliate</h1>
         <div class="status">
           <div class="status-dot"></div>
-          <span id="status-text">FB Affiliate System</span>
+          <span id="status-text">BD Coder & Developer</span>
         </div>
       </div>
       <div class="actions">
@@ -187,12 +187,16 @@
         <button class="btn-danger" id="btn-stop">ปิดระบบ</button>
       </div>
     </div>
-    
+
     <div class="header" style="margin-top: -10px; background: rgba(15, 23, 42, 0.5); padding: 10px 20px;">
-      <div style="font-size: 14px; font-weight: 600; color: #94a3b8;">Bot Controls:</div>
+      <div style="font-size: 14px; font-weight: 600; color: #94a3b8;">ควบคุมบอท:</div>
       <div class="actions">
-        <button class="btn-primary" style="background-color: #8b5cf6; box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.39);" id="btn-ldplayer">เปิด LDPlayer</button>
-        <button class="btn-primary" style="background-color: #10b981; box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39);" id="btn-start-bot">เริ่มทำงาน Bot</button>
+        <button class="btn-primary"
+          style="background-color: #8b5cf6; box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.39);" id="btn-ldplayer">เปิด
+          LDPlayer</button>
+        <button class="btn-primary"
+          style="background-color: #10b981; box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39);"
+          id="btn-start-bot">เริ่มทำงาน Bot</button>
         <button class="btn-danger" id="btn-stop-bot" disabled style="opacity: 0.5;">หยุด Bot</button>
       </div>
     </div>
@@ -203,7 +207,7 @@
   </div>
 
   <script>
-    window.onerror = function(message, source, lineno, colno, error) {
+    window.onerror = function (message, source, lineno, colno, error) {
       console.log(`ERROR: ${message} at ${source}:${lineno}:${colno}`);
     };
     try {
@@ -218,93 +222,93 @@
       // Notify main process that the GUI has finished loading its scripts and is ready for IPC
       ipcRenderer.send('gui-ready');
 
-    const terminal = document.getElementById('terminal');
-    const btnOpen = document.getElementById('btn-open');
-    const btnStop = document.getElementById('btn-stop');
-    
-    const btnLdplayer = document.getElementById('btn-ldplayer');
-    const btnStartBot = document.getElementById('btn-start-bot');
-    const btnStopBot = document.getElementById('btn-stop-bot');
-    
-    const statusDot = document.querySelector('.status-dot');
-    const statusText = document.getElementById('status-text');
+      const terminal = document.getElementById('terminal');
+      const btnOpen = document.getElementById('btn-open');
+      const btnStop = document.getElementById('btn-stop');
 
-    function addLog(msg) {
-      const line = document.createElement('div');
-      line.className = 'log-line';
+      const btnLdplayer = document.getElementById('btn-ldplayer');
+      const btnStartBot = document.getElementById('btn-start-bot');
+      const btnStopBot = document.getElementById('btn-stop-bot');
 
-      if (msg.includes('ERROR:') || msg.includes('BOT ERROR:')) {
-        line.classList.add('log-error');
-      } else if (msg.includes('SYSTEM:') || msg.includes('BOT SYSTEM:')) {
-        line.style.color = '#ebcb8b'; // Yellow for system
-        line.style.fontWeight = 'bold';
-      } else if (msg.includes('WARNING:')) {
-        line.style.color = '#d08770'; // Orange for warnings
-      } else if (msg.includes('SYSTEM ERROR:')) {
-        line.classList.add('log-error');
-        line.style.fontWeight = 'bold';
-      } else if (msg.includes('ready') || msg.includes('started') || msg.includes('สำเร็จ')) {
-        line.classList.add('log-info');
+      const statusDot = document.querySelector('.status-dot');
+      const statusText = document.getElementById('status-text');
+
+      function addLog(msg) {
+        const line = document.createElement('div');
+        line.className = 'log-line';
+
+        if (msg.includes('ERROR:') || msg.includes('BOT ERROR:')) {
+          line.classList.add('log-error');
+        } else if (msg.includes('SYSTEM:') || msg.includes('BOT SYSTEM:')) {
+          line.style.color = '#ebcb8b'; // Yellow for system
+          line.style.fontWeight = 'bold';
+        } else if (msg.includes('WARNING:')) {
+          line.style.color = '#d08770'; // Orange for warnings
+        } else if (msg.includes('SYSTEM ERROR:')) {
+          line.classList.add('log-error');
+          line.style.fontWeight = 'bold';
+        } else if (msg.includes('ready') || msg.includes('started') || msg.includes('สำเร็จ')) {
+          line.classList.add('log-info');
+        }
+
+        line.textContent = msg;
+        terminal.appendChild(line);
+        terminal.scrollTop = terminal.scrollHeight;
       }
 
-      line.textContent = msg;
-      terminal.appendChild(line);
-      terminal.scrollTop = terminal.scrollHeight;
-    }
+      ipcRenderer.on('server-log', (event, msg) => {
+        addLog(msg);
+        if (msg.includes('exited') || msg.includes('stopped')) {
+          statusDot.style.backgroundColor = 'var(--danger)';
+          statusDot.style.boxShadow = '0 0 8px var(--danger)';
+          statusText.textContent = 'Server Stopped';
+          btnOpen.disabled = true;
+          btnOpen.style.opacity = '0.5';
+        }
+      });
 
-    ipcRenderer.on('server-log', (event, msg) => {
-      addLog(msg);
-      if (msg.includes('exited') || msg.includes('stopped')) {
-        statusDot.style.backgroundColor = 'var(--danger)';
-        statusDot.style.boxShadow = '0 0 8px var(--danger)';
-        statusText.textContent = 'Server Stopped';
-        btnOpen.disabled = true;
-        btnOpen.style.opacity = '0.5';
-      }
-    });
+      // Bot logs
+      ipcRenderer.on('bot-log', (event, msg) => {
+        addLog(`[BOT] ${msg}`);
+      });
 
-    // Bot logs
-    ipcRenderer.on('bot-log', (event, msg) => {
-      addLog(`[BOT] ${msg}`);
-    });
-    
-    ipcRenderer.on('bot-status', (event, status) => {
-      if (status === 'started') {
-        btnStartBot.disabled = true;
-        btnStartBot.style.opacity = '0.5';
-        btnStopBot.disabled = false;
-        btnStopBot.style.opacity = '1';
-      } else if (status === 'stopped') {
-        btnStartBot.disabled = false;
-        btnStartBot.style.opacity = '1';
-        btnStopBot.disabled = true;
-        btnStopBot.style.opacity = '0.5';
-      }
-    });
+      ipcRenderer.on('bot-status', (event, status) => {
+        if (status === 'started') {
+          btnStartBot.disabled = true;
+          btnStartBot.style.opacity = '0.5';
+          btnStopBot.disabled = false;
+          btnStopBot.style.opacity = '1';
+        } else if (status === 'stopped') {
+          btnStartBot.disabled = false;
+          btnStartBot.style.opacity = '1';
+          btnStopBot.disabled = true;
+          btnStopBot.style.opacity = '0.5';
+        }
+      });
 
-    btnOpen.addEventListener('click', () => {
-      ipcRenderer.send('open-browser');
-    });
+      btnOpen.addEventListener('click', () => {
+        ipcRenderer.send('open-browser');
+      });
 
-    btnStop.addEventListener('click', () => {
-      ipcRenderer.send('stop-server');
-      addLog('กำลังปิดระบบ...');
-    });
-    
-    btnLdplayer.addEventListener('click', () => {
-      ipcRenderer.send('launch-ldplayer');
-      addLog('SYSTEM: สั่งเปิดโปรแกรม LDPlayer...');
-    });
-    
-    btnStartBot.addEventListener('click', () => {
-      ipcRenderer.send('start-bot');
-      addLog('BOT SYSTEM: กำลังสั่งรันบอท...');
-    });
-    
-    btnStopBot.addEventListener('click', () => {
-      ipcRenderer.send('stop-bot');
-      addLog('BOT SYSTEM: สั่งหยุดการทำงานบอท...');
-    });
+      btnStop.addEventListener('click', () => {
+        ipcRenderer.send('stop-server');
+        addLog('กำลังปิดระบบ...');
+      });
+
+      btnLdplayer.addEventListener('click', () => {
+        ipcRenderer.send('launch-ldplayer');
+        addLog('SYSTEM: สั่งเปิดโปรแกรม LDPlayer...');
+      });
+
+      btnStartBot.addEventListener('click', () => {
+        ipcRenderer.send('start-bot');
+        addLog('BOT SYSTEM: กำลังสั่งรันบอท...');
+      });
+
+      btnStopBot.addEventListener('click', () => {
+        ipcRenderer.send('stop-bot');
+        addLog('BOT SYSTEM: สั่งหยุดการทำงานบอท...');
+      });
 
     } catch (e) {
       console.log(`ERROR: ${e.message}`);

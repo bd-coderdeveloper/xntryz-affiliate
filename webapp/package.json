@@ -1,6 +1,6 @@
 {
   "name": "webapp",
-  "version": "1.0.52",
+  "version": "1.0.53",
   "private": true,
   "repository": "https://github.com/bd-coderdeveloper/xntryz-affiliate",
   "author": "bd-coderdeveloper",
@@ -60,6 +60,7 @@
     "@supabase/supabase-js": "^2.110.0",
     "clsx": "^2.1.1",
     "electron-updater": "^6.8.9",
+    "framer-motion": "^12.42.2",
     "lucide-react": "^1.22.0",
     "next": "16.2.9",
     "react": "19.2.4",
@@ -71,11 +72,11 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "electron": "^33.2.1",
-    "electron-builder": "^25.1.8"
+    "typescript": "^5"
   }
 }

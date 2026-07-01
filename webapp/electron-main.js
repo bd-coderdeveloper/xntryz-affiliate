@@ -111,7 +111,7 @@ app.on("ready", () => {
     if (mainWindow) mainWindow.webContents.send("server-log", `SYSTEM: มีการอัปเดตเวอร์ชันใหม่: ${info.version}`);
   });
   autoUpdater.on("update-not-available", (info) => {
-    if (mainWindow) mainWindow.webContents.send("server-log", "SYSTEM: คุณได้ใช้ BD FB Affiliate เวอร์ชันล่าสุดแล้ว");
+    if (mainWindow) mainWindow.webContents.send("server-log", "SYSTEM: ระบบ BD FB Affiliate พร้อมใช้งาน");
   });
   autoUpdater.on("error", (err) => {
     if (mainWindow) mainWindow.webContents.send("server-log", "ERROR: เกิดข้อผิดพลาดในการอัปเดตอัตโนมัติ " + err);
@@ -122,7 +122,7 @@ app.on("ready", () => {
     if (mainWindow) mainWindow.webContents.send("server-log", log_message);
   });
   autoUpdater.on("update-downloaded", (info) => {
-    if (mainWindow) mainWindow.webContents.send("server-log", "SYSTEM: ดาวน์โหลดเสร็จสิ้น! กำลังเริ่มการทำงานใหม่...");
+    if (mainWindow) mainWindow.webContents.send("server-log", "SYSTEM: ดาวน์โหลดเสร็จสิ้น! ระบบกำลังติดตั้งเวอร์ชั่นใหม่...");
     setTimeout(() => {
       autoUpdater.quitAndInstall();
     }, 1000);
@@ -160,7 +160,7 @@ ipcMain.on("stop-server", () => {
     serverProcess.kill();
     serverProcess = null;
     if (mainWindow) {
-      mainWindow.webContents.send("server-log", "SYSTEM: ปิดการทำงานเรียบร้อย...");
+      mainWindow.webContents.send("server-log", "SYSTEM: ระบบปิดการทำงานเรียบร้อย...");
     }
   }
 });
@@ -191,7 +191,7 @@ ipcMain.on("launch-ldplayer", () => {
       mainWindow?.webContents.send("server-log", `SYSTEM: กำลังเปิด ${exePath}...`);
       require('child_process').exec(`"${exePath}"`);
     } else {
-      mainWindow?.webContents.send("server-log", "SYSTEM ERROR: ไม่สามารถระบุที่อยู่ของ LDPlayer ได้");
+      mainWindow?.webContents.send("server-log", "SYSTEM ERROR: ไม่สามารถระบุโฟลเดอร์ไฟล์ LDPlayer ได้");
     }
   }
 });
@@ -215,10 +215,10 @@ ipcMain.on("start-bot", () => {
   }
 
   // Load environment variables to pass to bot
-  const envPath = isDev 
+  const envPath = isDev
     ? path.join(__dirname, ".env.local")
     : path.join(process.resourcesPath, ".env.production");
-    
+
   let botEnv = { ...process.env, PYTHONIOENCODING: 'utf-8' };
   if (fs.existsSync(envPath)) {
     const envContent = fs.readFileSync(envPath, 'utf8');
