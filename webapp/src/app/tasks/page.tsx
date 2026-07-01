@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 type Task = {
   id: string;
+  page_id: string;
   post_id: string;
   product_id: string;
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'already_exists' | 'pending_remove' | 'removed';
@@ -17,6 +18,9 @@ type Task = {
   link_name?: string;
   affiliate_link?: string;
   post_time?: string;
+  page_name?: string;
+  page_avatar?: string;
+  worker_id?: string;
 };
 
 export default function TasksPage() {
@@ -179,6 +183,8 @@ export default function TasksPage() {
               <tr>
                 <th className="px-6 py-4 w-12"></th>
                 <th className="px-6 py-4">สถานะ</th>
+                <th className="px-6 py-4">เพจเป้าหมาย</th>
+                <th className="px-6 py-4">ผู้ประมวลผล</th>
                 <th className="px-6 py-4">รูปภาพตัวอย่าง</th>
                 <th className="px-6 py-4">Reels ID</th>
                 <th className="px-6 py-4">โพสต์เมื่อ</th>
@@ -235,6 +241,26 @@ export default function TasksPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(task.status, task.error_message)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        {task.page_avatar ? (
+                          <img src={task.page_avatar} alt="page" className="w-8 h-8 rounded-full border border-dark-700 object-cover" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-dark-800 border border-dark-700 flex items-center justify-center text-xs text-dark-500">?</div>
+                        )}
+                        <span className="font-medium text-dark-200">{task.page_name || task.page_id}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {task.worker_id ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-dark-800/80 text-xs font-medium text-blue-400 border border-blue-900/30">
+                          <ImageIcon className="w-3 h-3" />
+                          {task.worker_id}
+                        </span>
+                      ) : (
+                        <span className="text-dark-600 text-xs">-</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       {task.thumbnail_url ? (

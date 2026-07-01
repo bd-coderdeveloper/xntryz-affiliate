@@ -165,7 +165,7 @@ ipcMain.on("stop-server", () => {
   }
 });
 
-let botProcess = null;
+let botProcesses = [];
 
 ipcMain.on("launch-ldplayer", () => {
   const { exec } = require('child_process');
@@ -196,8 +196,8 @@ ipcMain.on("launch-ldplayer", () => {
   }
 });
 
-ipcMain.on("start-bot", () => {
-  if (botProcess) {
+ipcMain.on("start-bot", (event, count = 1) => {
+  if (botProcesses.length > 0) {
     mainWindow?.webContents.send("server-log", "BOT SYSTEM: บอทกำลังทำงานอยู่แล้ว");
     return;
   }
@@ -236,34 +236,53 @@ ipcMain.on("start-bot", () => {
     }
   }
 
-  botProcess = spawn(botExePath, [], { env: botEnv });
   mainWindow?.webContents.send("bot-status", "started");
 
-  botProcess.stdout.on("data", (data) => {
-    if (mainWindow) mainWindow.webContents.send("bot-log", data.toString());
-  });
+  let closedCount = 0;
 
-  botProcess.stderr.on("data", (data) => {
-    if (mainWindow) mainWindow.webContents.send("bot-log", `ERROR: ${data.toString()}`);
-  });
+  for (let i = 0; i < count; i++) {
+    const port = 5555 + (i * 2);
+    const workerName = `จอ ${i + 1}`;
+    const args = ["--device", `127.0.0.1:${port}`, "--worker-name", workerName];
+    
+    const p = spawn(botExePath, args, { env: botEnv });
+    botProcesses.push(p);
 
-  botProcess.on("close", (code) => {
-    if (mainWindow) {
-      mainWindow.webContents.send("bot-log", `SYSTEM: บอทปิดการทำงาน (Code: ${code})`);
-      mainWindow.webContents.send("bot-status", "stopped");
-    }
-    botProcess = null;
-  });
+    p.stdout.on("data", (data) => {
+      if (mainWindow) mainWindow.webContents.send("bot-log", `[${workerName}] ${data.toString()}`);
+    });
+
+    p.stderr.on("data", (data) => {
+      if (mainWindow) mainWindow.webContents.send("bot-log", `[${workerName}] ERROR: ${data.toString()}`);
+    });
+
+    p.on("close", (code) => {
+      if (mainWindow) {
+        mainWindow.webContents.send("bot-log", `SYSTEM: บอท ${workerName} ปิดการทำงาน (Code: ${code})`);
+      }
+      closedCount++;
+      if (closedCount === count) {
+        if (mainWindow) mainWindow.webContents.send("bot-status", "stopped");
+        botProcesses = [];
+      }
+    });
+  }
 });
 
 ipcMain.on("stop-bot", () => {
-  if (botProcess) {
-    if (process.platform === 'win32') {
-      require('child_process').exec(`taskkill /pid ${botProcess.pid} /T /F`);
-    } else {
-      botProcess.kill();
-    }
-    botProcess = null;
+  if (botProcesses.length > 0) {
+    botProcesses.forEach(p => {
+      try {
+        if (process.platform === 'win32') {
+          require('child_process').exec(`taskkill /pid ${p.pid} /T /F`);
+        } else {
+          p.kill();
+        }
+      } catch (e) {
+        console.error("Error killing bot process", e);
+      }
+    });
+    botProcesses = [];
     if (mainWindow) {
       mainWindow.webContents.send("bot-log", "SYSTEM: บังคับปิดการทำงานบอทเรียบร้อย...");
       mainWindow.webContents.send("bot-status", "stopped");

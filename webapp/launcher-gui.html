@@ -189,7 +189,21 @@
     </div>
 
     <div class="header" style="margin-top: -10px; background: rgba(15, 23, 42, 0.5); padding: 10px 20px;">
-      <div style="font-size: 14px; font-weight: 600; color: #94a3b8;">ควบคุมบอท:</div>
+      <div style="font-size: 14px; font-weight: 600; color: #94a3b8; display: flex; align-items: center; gap: 10px;">
+        ควบคุมบอท:
+        <select id="bot-count" style="background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 4px; padding: 4px 8px; font-size: 13px;">
+          <option value="1">1 จอ</option>
+          <option value="2">2 จอ</option>
+          <option value="3">3 จอ</option>
+          <option value="4">4 จอ</option>
+          <option value="5">5 จอ</option>
+          <option value="6">6 จอ</option>
+          <option value="7">7 จอ</option>
+          <option value="8">8 จอ</option>
+          <option value="9">9 จอ</option>
+          <option value="10">10 จอ</option>
+        </select>
+      </div>
       <div class="actions">
         <button class="btn-primary"
           style="background-color: #8b5cf6; box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.39);" id="btn-ldplayer">เปิด
@@ -306,8 +320,9 @@
       });
 
       btnStartBot.addEventListener('click', () => {
-        ipcRenderer.send('start-bot');
-        addLog('BOT SYSTEM: กำลังสั่งรันบอท...');
+        const count = parseInt(document.getElementById('bot-count').value, 10) || 1;
+        ipcRenderer.send('start-bot', count);
+        addLog(`BOT SYSTEM: กำลังสั่งรันบอท ${count} ตัว...`);
       });
 
       btnStopBot.addEventListener('click', () => {

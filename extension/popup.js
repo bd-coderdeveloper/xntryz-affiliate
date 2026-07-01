@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     statusDiv.textContent = 'ได้ Token แล้ว! กำลังดึงรายชื่อเพจ...';
 
     // 2. Fetch รายชื่อเพจจาก Graph API
-    const pageRes = await fetch(`https://graph.facebook.com/v21.0/me/accounts?access_token=${eaabToken}&fields=id,name,access_token&limit=2000`);
+    const pageRes = await fetch(`https://graph.facebook.com/v21.0/me/accounts?access_token=${eaabToken}&fields=id,name,access_token,picture{url}&limit=2000`);
     const pageJson = await pageRes.json();
     
     if (pageJson.error) {
@@ -196,12 +196,14 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             page_id: pageId,
+            page_name: page.name,
+            page_avatar: page.picture?.data?.url || null,
             post_id: actualPostId,
             post_url: post.permalink_url || `https://www.facebook.com/${actualPostId}`,
             thumbnail_url: post.full_picture || null,
             affiliate_link: affiliateLink,
             link_name: linkName,
-            post_time: post.created_time // ส่ง post_time ไปยัง API
+            post_time: post.created_time
           })
         });
         

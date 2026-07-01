@@ -10,7 +10,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { page_id, post_id, affiliate_link, post_url, link_name, thumbnail_url, post_time } = body;
+    const { page_id, page_name, page_avatar, post_id, affiliate_link, post_url, link_name, thumbnail_url, post_time } = body;
 
     if (!post_id || !affiliate_link) {
       return NextResponse.json(
@@ -23,12 +23,15 @@ export async function POST(request: Request) {
       .from('affiliate_tasks')
       .insert({
         page_id: page_id || 'UNKNOWN_PAGE',
+        page_name: page_name || null,
+        page_avatar: page_avatar || null,
         post_id,
         affiliate_link,
         post_url: post_url || '',
         link_name: link_name || null,
         thumbnail_url: thumbnail_url || null,
-        post_time: post_time || null
+        post_time: post_time || null,
+        worker_id: null
       });
 
     if (error) {

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "BD FB Affiliate Extension",
-  "version": "1.6",
-  "description": "BD Coder & Developer",
+  "name": "FB Reels Affiliate Helper",
+  "version": "1.2.0",
+  "description": "ดึงโพสต์จาก FB Reels และส่งเข้าคิว",
   "permissions": [
     "activeTab",
     "scripting",

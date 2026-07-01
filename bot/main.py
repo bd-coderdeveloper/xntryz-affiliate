@@ -26,14 +26,21 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# ตั้งค่าการเชื่อมต่อ LDPlayer
-DEVICE_URL = "127.0.0.1:5555"
+import argparse
+
+parser = argparse.ArgumentParser(description='FB Affiliate Bot')
+parser.add_argument('--device', type=str, default='127.0.0.1:5555', help='Device serial or IP:Port')
+parser.add_argument('--worker-name', type=str, default='จอ 1', help='Worker name to record in DB')
+args = parser.parse_args()
+
+DEVICE_URL = args.device
+WORKER_NAME = args.worker_name
 d = None
 
 def connect_device():
     global d
     try:
-        print(f"กำลังเชื่อมต่ออุปกรณ์ที่ {DEVICE_URL} ...")
+        print(f"กำลังเชื่อมต่ออุปกรณ์ที่ {DEVICE_URL} ({WORKER_NAME}) ...")
         d = u2.connect(DEVICE_URL)
         print("เชื่อมต่ออุปกรณ์สำเร็จ!")
     except Exception as e:
@@ -48,8 +55,24 @@ def fetch_pending_tasks():
         print("Error fetching tasks:", e)
         return []
 
+def claim_task(task_id, original_status):
+    try:
+        # Atomic claim: Only update if the status is still what we think it is
+        res = supabase.table('affiliate_tasks').update({
+            'status': 'processing',
+            'worker_id': WORKER_NAME
+        }).eq('id', task_id).eq('status', original_status).execute()
+        
+        # If no row was updated, it means another bot took it
+        if not res.data or len(res.data) == 0:
+            return False
+        return True
+    except Exception as e:
+        print("Error claiming task:", e)
+        return False
+
 def update_task_status(task_id, status, error_message=None):
-    payload = {"status": status}
+    payload = {"status": status, "worker_id": WORKER_NAME}
     if error_message:
         payload["error_message"] = error_message
     
@@ -122,9 +145,8 @@ def add_product_flow(task):
             edit_texts[1].click()
             d.clear_text()
             link_name = task.get('link_name')
-            if not link_name:
-                link_name = "สนใจสั่งซื้อคลิกที่นี่"
-            edit_texts[1].set_text(link_name)
+            if link_name:
+                edit_texts[1].set_text(link_name)
     else:
         raise Exception("หาช่องกรอกข้อความไม่เจอ")
         
@@ -262,7 +284,10 @@ def process_tasks_for_page(page_id, page_tasks):
 
         # 2. ลูปเปิดโพสต์ทีละงาน
         for task in page_tasks:
-            update_task_status(task['id'], 'processing')
+            # พยายามแย่งงานก่อน (ถ้าบอทตัวอื่นเอาไปแล้วจะ return False)
+            if not claim_task(task['id'], task['status']):
+                print(f"Task {task['id']} ถูกบอทเครื่องอื่นรับไปแล้ว ข้ามงานนี้...")
+                continue
             post_id = task['post_id']
             post_url = task.get('post_url')
             
