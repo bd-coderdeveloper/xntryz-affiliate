@@ -96,6 +96,8 @@ def add_product_flow(task):
     print("เลือก Manage Product...")
     if d(textContains="Manage Product").exists(timeout=3):
         d(textContains="Manage Product").click()
+    elif d(textContains="Manage products").exists(timeout=3):
+        d(textContains="Manage products").click()
     elif d(textContains="จัดการสินค้า").exists(timeout=3):
         d(textContains="จัดการสินค้า").click()
     else:
@@ -254,19 +256,39 @@ def process_tasks_for_page(page_id, page_tasks):
                                 more_btns = d(descriptionContains="ตัวเลือก")
                                 
                             if more_btns.exists:
-                                more_btns[0].click()
-                                time.sleep(2)
-                                
-                                try:
-                                    # เข้าสู่วงจรเพิ่มสินค้า
-                                    add_product_flow(task)
-                                    update_task_status(task['id'], 'completed')
-                                    print(f"✅ เพิ่มสินค้าให้โพสต์ {matched_pid} สำเร็จ")
-                                except Exception as e:
-                                    print(f"❌ เกิดข้อผิดพลาดในการแท็ก: {e}")
-                                    update_task_status(task['id'], 'failed', str(e))
-                                    d.press("back") # พยายามกดย้อนกลับเผื่อค้างอยู่ในหน้าต่าง
-                                    time.sleep(1.5)
+                                success = False
+                                for i in range(len(more_btns)):
+                                    try:
+                                        print(f"ลองกดปุ่ม 3 จุด อันที่ {i+1}...")
+                                        more_btns[i].click()
+                                        time.sleep(2)
+                                        
+                                        try:
+                                            # เข้าสู่วงจรเพิ่มสินค้า
+                                            add_product_flow(task)
+                                            update_task_status(task['id'], 'completed')
+                                            print(f"✅ เพิ่มสินค้าให้โพสต์ {matched_pid} สำเร็จ")
+                                            success = True
+                                            break
+                                        except Exception as e:
+                                            if "ไม่พบเมนู Manage Product" in str(e):
+                                                # อาจจะกดผิดปุ่ม 3 จุด (ไปกดปุ่มของโพสต์ด้านบน)
+                                                print(f"อันที่ {i+1} ไม่มี Manage Product ข้ามไปลองอันถัดไป...")
+                                                d.press("back") # ปิดเมนู 3 จุดของปุ่มนี้
+                                                time.sleep(1.5)
+                                            else:
+                                                # Error อื่นๆ ถือว่าพังจริงๆ ส่ง exception ต่อไป
+                                                raise e
+                                    except Exception as err:
+                                        print(f"❌ เกิดข้อผิดพลาดในการแท็ก: {err}")
+                                        update_task_status(task['id'], 'failed', str(err))
+                                        d.press("back") # พยายามกดย้อนกลับเผื่อค้างอยู่ในหน้าต่าง
+                                        time.sleep(1.5)
+                                        break # ออกจาก loop ของ more_btns เพราะถือว่าพัง
+                                        
+                                if not success:
+                                    print("❌ ลองกดปุ่ม 3 จุดทุกอันแล้ว แต่ไม่เจอ Manage Product เลย")
+                                    update_task_status(task['id'], 'failed', "ไม่พบเมนู Manage Product ในโพสต์นี้")
                                 
                                 # ลบออกจากเป้าหมาย
                                 del target_tasks[matched_pid]
