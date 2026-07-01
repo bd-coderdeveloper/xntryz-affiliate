@@ -121,14 +121,26 @@ def add_product_flow(task):
     time.sleep(2)
     
     # กดบันทึก (Save/Add)
-    if d(textContains="Add").exists(timeout=3):
-        d(textContains="Add").click()
-    elif d(textContains="Save").exists(timeout=3):
-        d(textContains="Save").click()
-    elif d(textContains="บันทึก").exists(timeout=3):
-        d(textContains="บันทึก").click()
-    elif d(textContains="เพิ่ม").exists(timeout=3):
-        d(textContains="เพิ่ม").click()
+    print("กำลังพยายามกดปุ่มบันทึก...")
+    saved = False
+    
+    # ใช้ Exact Match เพื่อป้องกันการไปกดโดน Title เช่น "Add a product link"
+    save_keywords = ["Save", "บันทึก", "Add", "เพิ่ม"]
+    
+    for word in save_keywords:
+        if d(text=word).exists:
+            d(text=word).click()
+            saved = True
+            print(f"เจอและกดปุ่ม (text): {word}")
+            break
+        elif d(description=word).exists:
+            d(description=word).click()
+            saved = True
+            print(f"เจอและกดปุ่ม (description): {word}")
+            break
+            
+    if not saved:
+        print("⚠️ หาปุ่มบันทึกไม่เจอ")
         
     print("จำลองการทำงานเพิ่มสินค้าเสร็จสิ้น")
     time.sleep(3) 
