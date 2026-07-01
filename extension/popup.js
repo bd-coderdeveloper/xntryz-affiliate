@@ -112,56 +112,83 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
   statusDiv.textContent = 'กำลังดึงโพสต์...';
   
   let allPosts = [];
-  let nextUrl = `https://graph.facebook.com/v21.0/${pageId}/published_posts?fields=id,created_time,permalink_url,full_picture&limit=100&access_token=${page.access_token}`;
   
-  try {
-    // วนลูป Pagination ดึงโพสต์
+  // 1. Fetch Published Posts
+  let postsUrl = `https://graph.facebook.com/v21.0/${pageId}/published_posts?fields=id,created_time,permalink_url,full_picture&limit=100&access_token=${page.access_token}`;
+  
+  // 2. Fetch Video Reels
+  let reelsUrl = `https://graph.facebook.com/v21.0/${pageId}/video_reels?fields=id,creation_time,permalink_url,picture&limit=100&access_token=${page.access_token}`;
+  
+  async function fetchFeed(url, isReel) {
+    let nextUrl = url;
+    let feedItems = [];
     while (nextUrl) {
-      const res = await fetch(nextUrl);
-      const json = await res.json();
-      
-      if (json.error) {
-        throw new Error(json.error.message);
-      }
-      
-      const posts = json.data || [];
-      if (posts.length === 0) break;
-      
-      let shouldStop = false;
-      
-      for (const post of posts) {
-        const postDate = new Date(post.created_time);
-        
-        // ถ้าโพสต์เก่ากว่าวันที่เริ่ม ให้หยุดดึง (เพราะโพสต์เรียงจากใหม่ไปเก่า)
-        if (postDate < startDate) {
-          shouldStop = true;
+      try {
+        const res = await fetch(nextUrl);
+        const json = await res.json();
+        if (json.error) {
+          // If video_reels endpoint fails (e.g. permission or not available), just skip quietly
+          console.warn('API Error:', json.error.message);
           break;
         }
         
-        if (postDate >= startDate && postDate <= endDate) {
-          allPosts.push(post);
+        const items = json.data || [];
+        if (items.length === 0) break;
+        
+        let shouldStop = false;
+        
+        for (const item of items) {
+          const timeStr = isReel ? item.creation_time : item.created_time;
+          const itemDate = new Date(timeStr);
+          
+          if (itemDate < startDate) {
+            shouldStop = true;
+            break;
+          }
+          
+          if (itemDate >= startDate && itemDate <= endDate) {
+            feedItems.push({
+              id: item.id,
+              created_time: timeStr,
+              permalink_url: item.permalink_url,
+              full_picture: isReel ? item.picture : item.full_picture
+            });
+          }
         }
+        
+        if (shouldStop) break;
+        nextUrl = json.paging && json.paging.next ? json.paging.next : null;
+        
+      } catch (e) {
+        console.error('Fetch error:', e);
+        break;
       }
-      
-      if (shouldStop) break;
-      
-      nextUrl = json.paging && json.paging.next ? json.paging.next : null;
-      statusDiv.textContent = `กำลังดึงโพสต์... (พบแล้ว ${allPosts.length} โพสต์)`;
     }
+    return feedItems;
+  }
+
+  try {
+    statusDiv.textContent = 'กำลังดึงโพสต์ปกติ...';
+    const regularPosts = await fetchFeed(postsUrl, false);
+    
+    statusDiv.textContent = 'กำลังดึง Reels...';
+    const reels = await fetchFeed(reelsUrl, true);
+    
+    allPosts = [...regularPosts, ...reels];
     
     if (allPosts.length === 0) {
       statusDiv.style.color = '#ef4444';
-      statusDiv.textContent = 'ไม่พบโพสต์ในช่วงเวลาที่กำหนด';
+      statusDiv.textContent = 'ไม่พบโพสต์/Reels ในช่วงเวลาที่กำหนด';
       return;
     }
     
-    statusDiv.textContent = `กำลังส่งข้อมูล ${allPosts.length} โพสต์ไปยังระบบ...`;
+    statusDiv.textContent = `กำลังส่งข้อมูล ${allPosts.length} รายการไปยังระบบ...`;
     
     // ส่งข้อมูลไปที่ WebApp (Localhost)
     let successCount = 0;
     for (const post of allPosts) {
       try {
-        // แยก Post ID อกกจาก PageID_PostID
+        // แยก Post ID ออกจาก PageID_PostID
         const actualPostId = post.id.includes('_') ? post.id.split('_')[1] : post.id;
         
         const response = await fetch('http://localhost:3000/api/tasks', {
@@ -173,7 +200,8 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
             post_url: post.permalink_url || `https://www.facebook.com/${actualPostId}`,
             thumbnail_url: post.full_picture || null,
             affiliate_link: affiliateLink,
-            link_name: linkName
+            link_name: linkName,
+            post_time: post.created_time // ส่ง post_time ไปยัง API
           })
         });
         

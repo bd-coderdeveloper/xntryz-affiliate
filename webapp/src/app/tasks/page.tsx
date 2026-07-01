@@ -15,6 +15,8 @@ type Task = {
   post_url?: string;
   error_message?: string;
   link_name?: string;
+  affiliate_link?: string;
+  post_time?: string;
 };
 
 export default function TasksPage() {
@@ -165,15 +167,16 @@ export default function TasksPage() {
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Thumbnail</th>
                 <th className="px-6 py-4">Post ID</th>
-                <th className="px-6 py-4">Product ID</th>
-                <th className="px-6 py-4 text-right">เวลาของโพสต์</th>
+                <th className="px-6 py-4">เวลาของโพสต์</th>
+                <th className="px-6 py-4">Shopee Affiliate Link</th>
+                <th className="px-6 py-4 text-right">Link Name</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-dark-800/30">
               <AnimatePresence>
                 {tasks.length === 0 && !loading && (
                   <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                    <td colSpan={6} className="px-6 py-16 text-center">
+                    <td colSpan={7} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center justify-center">
                         <div className="w-16 h-16 bg-dark-800/50 rounded-full flex items-center justify-center mb-4">
                           <CheckCircle className="w-8 h-8 text-dark-500" />
@@ -229,20 +232,27 @@ export default function TasksPage() {
                         <span>{task.post_id}</span>
                       )}
                     </td>
-                    <td className="px-6 py-4">
-                      {task.product_id ? (
-                        <span className="bg-dark-800/50 px-2.5 py-1 rounded-md text-xs border border-dark-700/50 font-mono text-dark-200">
-                          {task.product_id}
-                        </span>
+                    <td className="px-6 py-4 font-medium text-dark-300">
+                      {task.post_time ? (
+                        <span>{new Date(task.post_time).toLocaleString('th-TH')}</span>
                       ) : (
-                        <span className="text-dark-500 italic">No Product ID</span>
+                        <span className="text-dark-500 italic">ไม่ทราบเวลา</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-right text-dark-400 text-sm">
-                      {task.link_name ? (
-                        <span className="text-orange-300 font-medium">{task.link_name}</span>
+                    <td className="px-6 py-4">
+                      {task.affiliate_link ? (
+                        <span className="bg-dark-800/50 px-2.5 py-1 rounded-md text-xs border border-dark-700/50 font-mono text-orange-300 break-all line-clamp-2 max-w-xs">
+                          {task.affiliate_link}
+                        </span>
                       ) : (
-                        <span>{new Date(task.created_at).toLocaleString('th-TH')}</span>
+                        <span className="text-dark-500 italic">ไม่มีลิงก์</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right text-dark-300 text-sm">
+                      {task.link_name ? (
+                        <span className="text-white font-medium">{task.link_name}</span>
+                      ) : (
+                        <span className="text-dark-500 italic">-</span>
                       )}
                     </td>
                   </motion.tr>

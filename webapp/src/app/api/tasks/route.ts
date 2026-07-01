@@ -10,7 +10,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { page_id, post_id, affiliate_link, post_url, link_name, thumbnail_url } = body;
+    const { page_id, post_id, affiliate_link, post_url, link_name, thumbnail_url, post_time } = body;
 
     if (!post_id || !affiliate_link) {
       return NextResponse.json(
@@ -27,7 +27,8 @@ export async function POST(request: Request) {
         affiliate_link,
         post_url: post_url || '',
         link_name: link_name || null,
-        thumbnail_url: thumbnail_url || null
+        thumbnail_url: thumbnail_url || null,
+        post_time: post_time || null
       });
 
     if (error) {
