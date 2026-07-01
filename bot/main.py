@@ -126,7 +126,7 @@ def process_task(task):
         # 0. สลับโปรไฟล์ไปที่เพจก่อน เพื่อความชัวร์ว่าเราอยู่ในโปรไฟล์ของเพจ
         url_page = f"fb://page/{task['page_id']}"
         print(f"กำลังเปิดหน้าเพจเพื่อสลับโปรไฟล์: {url_page}")
-        d.shell(f'am start -a android.intent.action.VIEW -d "{url_page}"')
+        d.shell(f'am start -a android.intent.action.VIEW -d "{url_page}" com.facebook.katana')
         time.sleep(10) # รอโหลดหน้าเพจให้เสร็จ
         
         print("กำลังหาปุ่มสลับโปรไฟล์...")
@@ -154,7 +154,8 @@ def process_task(task):
         url = f"https://www.facebook.com/reel/{task['post_id']}"
             
         print(f"เปิด URL โพสต์ (Reels): {url}")
-        d.shell(f'am start -a android.intent.action.VIEW -d "{url}"')
+        # ใส่ com.facebook.katana ต่อท้ายเพื่อบังคับไม่ให้เด้งไปเปิดใน Chrome
+        d.shell(f'am start -a android.intent.action.VIEW -d "{url}" com.facebook.katana')
         time.sleep(10) # รอโหลดหน้า Reels Player
         
         # 2. กดปุ่ม 'จุดสามจุด' (Menu) ของโพสต์
