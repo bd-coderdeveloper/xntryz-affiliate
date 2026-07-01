@@ -73,9 +73,20 @@ function extractPosts() {
         thumbnail = svgImage.getAttribute('xlink:href');
       }
 
+      // พยายามหาเวลาของโพสต์
+      let postTime = a.getAttribute('aria-label') || '';
+      if (!postTime && a.innerText && a.innerText.trim().length < 20) {
+        postTime = a.innerText.trim();
+      }
+
       // เก็บลง Map (ถ้ามี thumbnail ให้แทนที่ของเดิมที่อาจไม่มี)
-      if (!postsMap.has(postId) || (thumbnail && !postsMap.get(postId).thumbnail)) {
-        postsMap.set(postId, { id: postId, thumbnail: thumbnail });
+      // อัปเดต postTime ด้วยถ้ามีอันใหม่ที่ชัดเจนกว่า
+      if (!postsMap.has(postId)) {
+        postsMap.set(postId, { id: postId, thumbnail: thumbnail, time: postTime });
+      } else {
+        const existing = postsMap.get(postId);
+        if (thumbnail && !existing.thumbnail) existing.thumbnail = thumbnail;
+        if (postTime && !existing.time) existing.time = postTime;
       }
     }
   });
@@ -98,7 +109,8 @@ async function sendToWebApp(pageId, posts, productId) {
           page_id: pageId,
           post_id: post.id,
           product_id: productId,
-          thumbnail_url: post.thumbnail
+          thumbnail_url: post.thumbnail,
+          link_name: post.time || '' // ส่งเวลาไปใน field link_name
         })
       });
       

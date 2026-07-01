@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { RefreshCw, Plus, Clock, CheckCircle, XCircle, Trash2, ExternalLink, Image as ImageIcon } from 'lucide-react';
+import { RefreshCw, Clock, CheckCircle, XCircle, Trash2, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -14,14 +14,12 @@ type Task = {
   thumbnail_url?: string;
   post_url?: string;
   error_message?: string;
+  link_name?: string;
 };
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [postId, setPostId] = useState('');
-  const [productId, setProductId] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
     fetchTasks();
@@ -57,38 +55,6 @@ export default function TasksPage() {
     }
   };
 
-  const handleAddTask = async () => {
-    if (!postId || !productId) return;
-    
-    setIsAdding(true);
-    try {
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          post_id: postId,
-          affiliate_link: `https://s.shopee.co.th/${productId}`
-        })
-      });
-      
-      const result = await response.json();
-      if (result.success) {
-        setPostId('');
-        setProductId('');
-        fetchTasks();
-      } else {
-        alert(result.error || result.message || 'Error adding task');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Failed to add task');
-    } finally {
-      setIsAdding(false);
-    }
-  };
-
   const handleResetFailed = async () => {
     try {
       await supabase
@@ -114,6 +80,16 @@ export default function TasksPage() {
       fetchTasks();
     } catch (err) {
       console.error('Error clearing tasks:', err);
+    }
+  };
+
+  const handleDeleteTask = async (id: string) => {
+    if (!confirm("ต้องการลบคิวงานนี้ใช่หรือไม่?")) return;
+    try {
+      await supabase.from('affiliate_tasks').delete().eq('id', id);
+      fetchTasks();
+    } catch (err) {
+      console.error('Error deleting task:', err);
     }
   };
 
@@ -167,52 +143,6 @@ export default function TasksPage() {
         </div>
       </motion.div>
 
-      {/* Add Task Box - Floating Glass Card */}
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.1 }}
-        className="glass-panel p-8 mb-8 relative overflow-hidden group rounded-[2rem]"
-      >
-        <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-        
-        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-          <Plus className="w-5 h-5 text-orange-400" />
-          เพิ่มคิวงานใหม่
-        </h3>
-        
-        <div className="flex flex-col md:flex-row gap-5 items-end relative z-10">
-          <div className="flex-1 space-y-2 w-full">
-            <label className="text-sm font-medium text-dark-300">Post ID</label>
-            <input 
-              type="text" 
-              value={postId} 
-              onChange={e => setPostId(e.target.value)} 
-              className="input-primary" 
-              placeholder="e.g. 1025920259951304" 
-            />
-          </div>
-          <div className="flex-1 space-y-2 w-full">
-            <label className="text-sm font-medium text-dark-300">Product ID (Shopee)</label>
-            <input 
-              type="text" 
-              value={productId} 
-              onChange={e => setProductId(e.target.value)} 
-              className="input-primary" 
-              placeholder="e.g. 5q6Cjg9DTJ" 
-            />
-          </div>
-          <button 
-            onClick={handleAddTask} 
-            disabled={isAdding || !postId || !productId} 
-            className="btn-primary py-3 px-8 h-[52px] flex items-center justify-center gap-2 md:w-auto w-full disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isAdding ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
-            เพิ่มคิว
-          </button>
-        </div>
-      </motion.div>
-
       {/* Task List */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -231,24 +161,25 @@ export default function TasksPage() {
           <table className="w-full text-left text-sm text-dark-300 border-collapse">
             <thead className="bg-dark-950/50 text-dark-400 font-medium border-b border-dark-800/60">
               <tr>
+                <th className="px-6 py-4 w-12"></th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Thumbnail</th>
                 <th className="px-6 py-4">Post ID</th>
                 <th className="px-6 py-4">Product ID</th>
-                <th className="px-6 py-4 text-right">Created At</th>
+                <th className="px-6 py-4 text-right">เวลาของโพสต์</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-dark-800/30">
               <AnimatePresence>
                 {tasks.length === 0 && !loading && (
                   <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                    <td colSpan={5} className="px-6 py-16 text-center">
+                    <td colSpan={6} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center justify-center">
                         <div className="w-16 h-16 bg-dark-800/50 rounded-full flex items-center justify-center mb-4">
                           <CheckCircle className="w-8 h-8 text-dark-500" />
                         </div>
                         <p className="text-lg text-dark-300 font-medium">ไม่มีคิวงานในขณะนี้</p>
-                        <p className="text-sm text-dark-500 mt-1">เพิ่มคิวงานใหม่จากฟอร์มด้านบน</p>
+                        <p className="text-sm text-dark-500 mt-1">ใช้งานส่วนเสริมเพื่อดึงโพสต์จากเพจ</p>
                       </div>
                     </td>
                   </motion.tr>
@@ -263,6 +194,17 @@ export default function TasksPage() {
                     whileHover={{ backgroundColor: 'rgba(255,255,255,0.02)' }}
                     className="transition-colors group"
                   >
+                    <td className="px-6 py-4">
+                      {task.status === 'pending' || task.status === 'failed' ? (
+                        <button 
+                          onClick={() => handleDeleteTask(task.id)}
+                          className="text-dark-500 hover:text-red-400 p-2 rounded-lg hover:bg-red-500/10 transition-colors"
+                          title="ลบงานนี้"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      ) : null}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(task.status, task.error_message)}
                     </td>
@@ -297,7 +239,11 @@ export default function TasksPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-right text-dark-400 text-sm">
-                      {new Date(task.created_at).toLocaleString('th-TH')}
+                      {task.link_name ? (
+                        <span className="text-orange-300 font-medium">{task.link_name}</span>
+                      ) : (
+                        <span>{new Date(task.created_at).toLocaleString('th-TH')}</span>
+                      )}
                     </td>
                   </motion.tr>
                 ))}

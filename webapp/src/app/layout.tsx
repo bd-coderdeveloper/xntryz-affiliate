@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Kanit } from "next/font/google";
 import "./globals.css";
 import Sidebar from '@/components/Sidebar';
 
-const inter = Inter({ subsets: ["latin"] });
+const kanit = Kanit({ weight: ['300', '400', '500', '600', '700'], subsets: ["latin", "thai"] });
 
 export const metadata: Metadata = {
   title: "FB Affiliate System",
@@ -17,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th">
-      <body className={`${inter.className} min-h-screen bg-dark-950 flex`}>
+      <body className={`${kanit.className} min-h-screen bg-dark-950 flex`}>
         {/* Sidebar */}
         <Sidebar />
 

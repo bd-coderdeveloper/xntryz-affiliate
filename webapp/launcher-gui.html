@@ -269,6 +269,11 @@
 
       // Bot logs
       ipcRenderer.on('bot-log', (event, msg) => {
+        // Filter out noisy technical logs or standard warnings
+        if (!msg || msg.trim() === '') return;
+        if (msg.match(/^\[[A-Z] \d{6} /)) return; // u2 standard logs e.g. [I 230701 10:10:10]
+        if (msg.includes('urllib3.connectionpool')) return;
+        
         addLog(`[BOT] ${msg}`);
       });
 

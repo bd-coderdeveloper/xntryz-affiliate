@@ -3,12 +3,16 @@ import sys
 import functools
 import time
 import os
+import logging
 import uiautomator2 as u2
 from supabase import create_client, Client
 import requests
 
 # บังคับให้ print ทุกครั้งส่งข้อมูลออกไปที่ Launcher ทันที (แก้ปัญหา Python Buffer)
 print = functools.partial(print, flush=True)
+
+# ปิด Log ของ uiautomator2 ที่รกเกินไป
+logging.getLogger("uiautomator2").setLevel(logging.ERROR)
 
 # โหลดค่าจากไฟล์ .env
 load_dotenv()
@@ -31,7 +35,7 @@ def connect_device():
     try:
         print(f"กำลังเชื่อมต่ออุปกรณ์ที่ {DEVICE_URL} ...")
         d = u2.connect(DEVICE_URL)
-        print("เชื่อมต่ออุปกรณ์สำเร็จ:", d.device_info)
+        print("เชื่อมต่ออุปกรณ์สำเร็จ!")
     except Exception as e:
         print("ไม่สามารถเชื่อมต่ออุปกรณ์ได้:", e)
         sys.exit(1)

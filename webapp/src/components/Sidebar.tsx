@@ -55,12 +55,6 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-dark-800/60 shrink-0">
-        <button className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-dark-400 hover:text-red-400 hover:bg-red-500/10 transition-colors group">
-          <LogOut className="w-5 h-5 text-dark-500 group-hover:text-red-400 transition-colors" />
-          <span className="font-medium">ออกจากระบบ</span>
-        </button>
-      </div>
     </aside>
   );
 }
