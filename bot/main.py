@@ -55,41 +55,7 @@ def update_task_status(task_id, status, error_message=None):
     except Exception as e:
         print("Error updating task:", e)
 
-def expand_short_url(url):
-    """
-    แกะรอยลิงก์ย่อ (เช่น fb.watch หรือ share/v/) ให้เป็นลิงก์เต็ม
-    พร้อมกับดึง ID ทุกตัวที่เกี่ยวข้องจาก HTML (แก้ปัญหา Post ID ไม่ตรงกับ Reel ID)
-    """
-    import re
-    try:
-        if "fb.watch" in url or "share/" in url:
-            print(f"พบลิงก์ย่อ: {url} กำลังถอดรหัส...")
-            # ใช้ Dalvik User-Agent เพื่อหลอกว่าเป็นแอปมือถือ ป้องกัน Facebook บล็อก
-            headers = {'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 11; Pixel 5 Build/RQ3A.210805.001.A1)'}
-            response = requests.get(url, allow_redirects=True, headers=headers, timeout=10)
-            
-            if response.status_code == 200:
-                # ค้นหาตัวเลข 14-17 หลักทั้งหมดใน HTML (ครอบคลุม Post ID, Video ID, Reel ID)
-                ids = re.findall(r'\b\d{14,17}\b', response.text)
-                
-                match_og = re.search(r'og:url"\s*content="([^"]+)"', response.text)
-                og_url = match_og.group(1) if match_og else response.url
-                
-                # รวบรวม ID ทั้งหมดเป็น string ก้อนเดียว 
-                all_ids_str = " ".join(set(ids))
-                print(f"ถอดรหัสลิงก์สำเร็จ: {og_url}")
-                print(f"พบรหัสที่เกี่ยวข้องใน HTML: {all_ids_str}")
-                
-                # คืนค่ากลับไปทั้ง URL เต็มและรหัสทั้งหมด เพื่อให้ระบบหาเจอแน่ๆ
-                return og_url + " " + all_ids_str
-                    
-            full_url = response.url
-            print(f"ถอดรหัสลิงก์ (Fallback): {full_url}")
-            return full_url
-        return url
-    except Exception as e:
-        print(f"Error expanding short url: {e}")
-        return url
+
 
 def add_product_flow(task):
     # 3. ให้เลือก Manage Product
@@ -152,21 +118,15 @@ def add_product_flow(task):
     time.sleep(3) 
 
 def process_tasks_for_page(page_id, page_tasks):
-    print(f"\n=== เริ่มประมวลผลเพจ: {page_id} จำนวน {len(page_tasks)} โพสต์ ===")
-    
-    # ดึงคิวทั้งหมดที่ต้องทำในเพจนี้มาเก็บไว้
-    target_tasks = {str(t['post_id']): t for t in page_tasks}
-    
-    for pid, task in target_tasks.items():
-        update_task_status(task['id'], 'processing')
+    print(f"\n=== เริ่มประมวลผลเพจ: {page_id} จำนวน {len(page_tasks)} โพสต์ (โหมด Direct Deep-Link) ===")
     
     try:
         if d is None:
             raise Exception("Device is not connected")
             
-        # 1. สลับโปรไฟล์ไปที่เพจ (ใช้ fb://page/)
+        # 1. สลับโปรไฟล์ไปที่เพจ (ใช้ fb://page/) ก่อนเพื่อความชัวร์
         url_page = f"fb://page/{page_id}"
-        print(f"กำลังเปิดหน้าเพจ: {url_page}")
+        print(f"กำลังเปิดหน้าเพจเพื่อสลับโปรไฟล์: {url_page}")
         d.shell(f'am start -a android.intent.action.VIEW -d "{url_page}" com.facebook.katana')
         time.sleep(10)
         
@@ -190,142 +150,86 @@ def process_tasks_for_page(page_id, page_tasks):
         if not switched:
             print("ไม่พบปุ่มสลับ อาจจะอยู่ในโปรไฟล์เพจอยู่แล้ว")
 
-        print(f"\nกำลังเริ่มสแกนหน้า Timeline ของเพจ เพื่อหา {len(target_tasks)} โพสต์...")
-        max_scrolls = 200 # เลื่อนได้สูงสุด 200 ครั้ง
-        seen_urls = set()
-        
-        for scroll_count in range(max_scrolls):
-            if not target_tasks:
-                print("✅ ประมวลผลครบทุกคิวงานของเพจนี้แล้ว!")
-                break
-                
-            print(f"สแกนรอบที่ {scroll_count+1}/{max_scrolls} (เหลืออีก {len(target_tasks)} โพสต์)")
+        # 2. ลูปเปิดโพสต์ทีละงาน
+        for task in page_tasks:
+            update_task_status(task['id'], 'processing')
+            post_id = task['post_id']
+            post_url = task.get('post_url')
             
-            # หาปุ่ม Share แบบเจาะจง เพื่อป้องกันการไปโดนปุ่ม "Share now" ในเมนู
-            shares = d(text="Share", className="android.view.ViewGroup")
-            if not shares.exists:
-                shares = d(text="แชร์", className="android.view.ViewGroup")
-            if not shares.exists:
-                shares = d(description="Share")
-            if not shares.exists:
-                shares = d(description="แชร์")
+            # สร้าง Deep Link
+            # ถ้ามี post_url (เช่นจาก WebApp ส่งมา) ให้เปิดอันนั้น
+            # ถ้าไม่มี ให้เดาว่าเป็น /posts/ ของเพจ
+            target_url = post_url if post_url else f"https://www.facebook.com/{page_id}/posts/{post_id}"
+            
+            print(f"\n🎯 [Task: {post_id}] กำลังกระโดดไปที่: {target_url}")
+            
+            # ยิงคำสั่ง ADB เปิด Facebook ตรงไปที่โพสต์นั้น
+            d.shell(f'am start -a android.intent.action.VIEW -d "{target_url}" com.facebook.katana')
+            
+            # รอโหลดโพสต์ให้เสร็จ
+            time.sleep(7)
+            
+            # หาปุ่ม 3 จุดของโพสต์นี้ (More options)
+            # ในหน้า Single Post หรือ Reels Viewer จะมีปุ่มนี้แค่ปุ่มเดียว
+            more_btns = d(description="More options")
+            if not more_btns.exists:
+                more_btns = d(description="More")
+            if not more_btns.exists:
+                more_btns = d(description="เพิ่มเติม")
+            if not more_btns.exists:
+                more_btns = d(description="ตัวเลือก")
                 
-            if shares.exists:
-                try:
-                    # ลองกด Share อันแรกที่พบ
-                    shares[0].click(timeout=3)
-                    time.sleep(2)
-                    
-                    # กด Copy link
-                    copy_btn = d(text="Copy link")
-                    if not copy_btn.exists:
-                        copy_btn = d(text="คัดลอกลิงก์")
-                    if not copy_btn.exists:
-                        copy_btn = d(descriptionContains="Copy link")
-                    if not copy_btn.exists:
-                        copy_btn = d(descriptionContains="คัดลอกลิงก์")
+            if more_btns.exists:
+                success = False
+                for i in range(len(more_btns)):
+                    try:
+                        print(f"ลองกดปุ่ม 3 จุด อันที่ {i+1}...")
+                        more_btns[i].click()
+                        time.sleep(2)
                         
-                    if copy_btn.exists:
-                        copy_btn.click(timeout=3)
-                        time.sleep(1.5)
-                        
-                        # อ่าน Clipboard
-                        raw_clip = d.clipboard
-                        
-                        # ถอดรหัสลิงก์ย่อเป็นลิงก์เต็ม
-                        clip = expand_short_url(raw_clip)
-                        
-                        # เช็คว่ามี post_id เป้าหมายซ่อนอยู่ใน link ไหม
-                        matched_pid = None
-                        for pid in target_tasks.keys():
-                            if pid in clip:
-                                matched_pid = pid
-                                break
-                                
-                        if matched_pid:
-                            print(f"🎯 เจอโพสต์เป้าหมายแล้ว! (Post ID: {matched_pid})")
-                            task = target_tasks[matched_pid]
-                            
-                            # หาปุ่ม 3 จุดของโพสต์นี้ (More options)
-                            more_btns = d(description="More options")
-                            if not more_btns.exists:
-                                more_btns = d(description="More")
-                            if not more_btns.exists:
-                                more_btns = d(description="เพิ่มเติม")
-                            if not more_btns.exists:
-                                more_btns = d(description="ตัวเลือก")
-                                
-                            if more_btns.exists:
-                                success = False
-                                for i in range(len(more_btns)):
-                                    try:
-                                        print(f"ลองกดปุ่ม 3 จุด อันที่ {i+1}...")
-                                        more_btns[i].click()
-                                        time.sleep(2)
-                                        
-                                        try:
-                                            # เข้าสู่วงจรเพิ่มสินค้า
-                                            add_product_flow(task)
-                                            update_task_status(task['id'], 'completed')
-                                            print(f"✅ เพิ่มสินค้าให้โพสต์ {matched_pid} สำเร็จ")
-                                            success = True
-                                            break
-                                        except Exception as e:
-                                            if "ไม่พบเมนู Manage Product" in str(e):
-                                                # อาจจะกดผิดปุ่ม 3 จุด (ไปกดปุ่มของโพสต์ด้านบน)
-                                                print(f"อันที่ {i+1} ไม่มี Manage Product ข้ามไปลองอันถัดไป...")
-                                                d.press("back") # ปิดเมนู 3 จุดของปุ่มนี้
-                                                time.sleep(1.5)
-                                            else:
-                                                # Error อื่นๆ ถือว่าพังจริงๆ ส่ง exception ต่อไป
-                                                raise e
-                                    except Exception as err:
-                                        print(f"❌ เกิดข้อผิดพลาดในการแท็ก: {err}")
-                                        update_task_status(task['id'], 'failed', str(err))
-                                        d.press("back") # พยายามกดย้อนกลับเผื่อค้างอยู่ในหน้าต่าง
-                                        time.sleep(1.5)
-                                        break # ออกจาก loop ของ more_btns เพราะถือว่าพัง
-                                        
-                                if not success:
-                                    print("❌ ลองกดปุ่ม 3 จุดทุกอันแล้ว แต่ไม่เจอ Manage Product เลย")
-                                    update_task_status(task['id'], 'failed', "ไม่พบเมนู Manage Product ในโพสต์นี้")
-                                
-                                # ลบออกจากเป้าหมาย
-                                del target_tasks[matched_pid]
-                            else:
-                                print("⚠️ หาปุ่ม 3 จุดไม่เจอ ข้ามไปก่อน")
-                        else:
-                            if raw_clip in seen_urls:
-                                print("เจอโพสต์เดิมซ้ำ! กำลังพยายามเลื่อนหน้าจอให้มากขึ้น...")
-                                # เลื่อนหน้าจอแรงๆ เพื่อให้พ้นโพสต์เดิม
-                                d.swipe(500, 1500, 500, 300, duration=0.2)
+                        try:
+                            # เข้าสู่วงจรเพิ่มสินค้า
+                            add_product_flow(task)
+                            update_task_status(task['id'], 'completed')
+                            print(f"✅ เพิ่มสินค้าให้โพสต์ {post_id} สำเร็จ")
+                            success = True
+                            break
+                        except Exception as e:
+                            if "ไม่พบเมนู Manage Product" in str(e):
+                                # อาจจะไปเปิดผิดโพสต์หรือไม่มีเมนูนี้
+                                print(f"อันที่ {i+1} ไม่มี Manage Product ข้ามไปลองอันถัดไป...")
+                                d.press("back") # ปิดเมนู 3 จุดของปุ่มนี้
                                 time.sleep(1.5)
-                                d.swipe(500, 1500, 500, 300, duration=0.2)
-                            seen_urls.add(raw_clip)
-                    else:
-                        print("⚠️ ไม่เจอปุ่ม Copy link ในเมนู Share กดย้อนกลับ")
-                        d.press("back")
+                            else:
+                                raise e
+                    except Exception as err:
+                        print(f"❌ เกิดข้อผิดพลาดในการแท็ก: {err}")
+                        update_task_status(task['id'], 'failed', str(err))
+                        d.press("back") # พยายามกดย้อนกลับเผื่อค้างอยู่ในหน้าต่าง
                         time.sleep(1.5)
+                        break # พังแล้ว ข้ามไปคิวต่อไป
                         
-                except Exception as e:
-                    print(f"Error checking share: {e}")
-                    d.press("back") # พยายามกดย้อนกลับเผื่อค้าง
-                    time.sleep(1.5)
+                if not success:
+                    print(f"❌ ลองกดปุ่ม 3 จุดทุกอันแล้ว แต่ไม่เจอ Manage Product ในโพสต์ {post_id}")
+                    update_task_status(task['id'], 'failed', "ไม่พบเมนู Manage Product ในโพสต์นี้ (เปิดตรง)")
+            else:
+                print(f"⚠️ หาปุ่ม 3 จุดไม่เจอเลยในโพสต์ {post_id} อาจจะโหลดไม่ขึ้น หรือรูปแบบ UI เปลี่ยนไป")
+                update_task_status(task['id'], 'failed', "เปิดลิงก์แล้วแต่ไม่พบปุ่ม 3 จุด")
             
-            # เลื่อนหน้าจอลงตามปกติเพื่อเช็คโพสต์ถัดไป
-            d.swipe(500, 1200, 500, 400, duration=0.3)
-            time.sleep(1.5)
+            # ปิดหน้าโพสต์ปัจจุบัน เพื่อให้เครื่องไม่ค้างหรือแอป Facebook หน่วงเกินไป
+            # (กด Back 1-2 ทีเพื่อกลับไปหน้าหลัก)
+            d.press("back")
+            time.sleep(1)
             
-        # ถ้าเลื่อนจนหมดโควต้าแล้วยังเหลือคิว
-        if target_tasks:
-            print(f"⚠️ สแกนจนครบ {max_scrolls} ครั้งแล้ว แต่ยังเหลือโพสต์ที่หาไม่เจออีก {len(target_tasks)} โพสต์")
-            for pid, task in target_tasks.items():
-                update_task_status(task['id'], 'failed', 'หาโพสต์ไม่พบบน Timeline (อาจอยู่ลึกเกินไป)')
-                
     except Exception as e:
-        print("❌ เกิดข้อผิดพลาดรุนแรงในการสแกนเพจ:", e)
-        for pid, task in target_tasks.items():
-            update_task_status(task['id'], 'failed', str(e))
+        print(f"Error processing page {page_id}: {e}")
+        # Mark remaining processing tasks as failed
+        for task in page_tasks:
+            try:
+                # To be safe, just update all to failed if the whole page processing crashes
+                update_task_status(task['id'], 'failed', str(e))
+            except:
+                pass
 def reset_orphaned_tasks():
     try:
         response = supabase.table('affiliate_tasks').select('*').eq('status', 'processing').execute()
