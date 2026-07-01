@@ -109,6 +109,15 @@ export default function TasksPage() {
     }
   };
 
+  const handleRetryTask = async (id: string) => {
+    try {
+      await supabase.from('affiliate_tasks').update({ status: 'pending', error_message: null, worker_id: null }).eq('id', id);
+      fetchTasks();
+    } catch (err) {
+      console.error('Error retrying task:', err);
+    }
+  };
+
   const getStatusBadge = (status: Task['status'], errorMsg?: string) => {
     switch (status) {
       case 'pending':
@@ -226,6 +235,15 @@ export default function TasksPage() {
                             title="ลบงานนี้"
                           >
                             <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        {task.status === 'failed' && (
+                          <button
+                            onClick={() => handleRetryTask(task.id)}
+                            className="text-dark-500 hover:text-blue-400 p-2 rounded-lg hover:bg-blue-500/10 transition-colors"
+                            title="ลองใหม่อีกครั้ง"
+                          >
+                            <RefreshCw className="w-4 h-4" />
                           </button>
                         )}
                         {(task.status === 'completed' || task.status === 'already_exists') && (
