@@ -27,9 +27,9 @@ export default function Home() {
       const { data, error } = await supabase
         .from('affiliate_tasks')
         .select('status');
-        
+
       if (error) throw error;
-      
+
       const counts = {
         pending: 0,
         processing: 0,
@@ -38,7 +38,7 @@ export default function Home() {
         already_exists: 0,
         total: data ? data.length : 0
       };
-      
+
       if (data) {
         data.forEach(task => {
           if (task.status in counts) {
@@ -46,7 +46,7 @@ export default function Home() {
           }
         });
       }
-      
+
       setStats(counts);
     } catch (err) {
       console.error("Error fetching stats:", err);
@@ -80,13 +80,13 @@ export default function Home() {
 
   return (
     <div className="p-8 pb-20 font-sans min-h-screen relative">
-      <motion.div 
+      <motion.div
         className="flex flex-col gap-8 max-w-6xl mx-auto relative z-10"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        
+
         {/* Header */}
         <motion.div variants={itemVariants} className="glass-panel p-10 rounded-[2rem] flex flex-col md:flex-row items-start md:items-center justify-between relative overflow-hidden group">
           <div className="absolute -inset-1 bg-gradient-to-r from-orange-500/20 to-transparent blur-2xl group-hover:from-orange-500/30 transition-all duration-700"></div>
@@ -95,10 +95,10 @@ export default function Home() {
               Dashboard Overview
             </h1>
             <p className="text-dark-300 text-lg">
-              ยินดีต้อนรับสู่ระบบจัดการคิวงาน Affiliate (FB Affiliate System)
+              ยินดีต้อนรับสู่ระบบจัดการคิวงาน FB Affiliate System
             </p>
           </div>
-          <button 
+          <button
             onClick={fetchStats}
             className="mt-6 md:mt-0 relative z-10 flex items-center gap-2 px-5 py-2.5 bg-dark-800/80 hover:bg-dark-700/80 border border-dark-700 text-dark-200 hover:text-white rounded-xl transition-all shadow-lg"
           >
@@ -109,7 +109,7 @@ export default function Home() {
 
         {/* Stats Grid */}
         <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          
+
           {/* Pending */}
           <div className="glass-panel rounded-3xl p-6 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
@@ -139,7 +139,7 @@ export default function Home() {
               <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span> กำลังทำงาน
             </p>
           </div>
-          
+
           {/* Completed */}
           <div className="glass-panel rounded-3xl p-6 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
@@ -173,7 +173,7 @@ export default function Home() {
 
         {/* Failed Banner if any */}
         {stats.failed > 0 && !loading && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             className="glass-panel bg-red-950/20 border-red-900/50 rounded-2xl p-6 flex items-center justify-between"
@@ -196,7 +196,7 @@ export default function Home() {
         {/* CTA */}
         <motion.div variants={itemVariants} className="glass-panel rounded-[2rem] p-12 text-center relative overflow-hidden group">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] bg-orange-500/5 rounded-full blur-3xl pointer-events-none"></div>
-          
+
           <div className="relative z-10 flex flex-col items-center">
             <div className="w-20 h-20 bg-dark-800/80 border border-dark-700 rounded-2xl flex items-center justify-center mb-6 shadow-xl group-hover:scale-110 transition-transform duration-500 group-hover:rotate-6">
               <ShoppingBag className="w-10 h-10 text-orange-400" />

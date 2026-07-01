@@ -9,7 +9,7 @@ type Task = {
   id: string;
   post_id: string;
   product_id: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'already_exists';
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'already_exists' | 'pending_remove' | 'removed';
   created_at: string;
   thumbnail_url?: string;
   post_url?: string;
@@ -63,7 +63,7 @@ export default function TasksPage() {
         .from('affiliate_tasks')
         .update({ status: 'pending', error_message: null })
         .in('status', ['failed', 'processing']);
-      
+
       fetchTasks();
     } catch (err) {
       console.error('Error resetting tasks:', err);
@@ -72,13 +72,13 @@ export default function TasksPage() {
 
   const handleClearCompleted = async () => {
     if (!confirm("ต้องการล้างประวัติงานที่ทำเสร็จแล้วใช่หรือไม่?")) return;
-    
+
     try {
       await supabase
         .from('affiliate_tasks')
         .delete()
-        .eq('status', 'completed');
-      
+        .in('status', ['completed', 'already_exists', 'removed']);
+
       fetchTasks();
     } catch (err) {
       console.error('Error clearing tasks:', err);
@@ -95,30 +95,44 @@ export default function TasksPage() {
     }
   };
 
+  const handleRequestRemoveLink = async (id: string) => {
+    if (!confirm("ต้องการสั่งให้บอทเข้าไปลบลิงก์นี้ออกจากโพสต์ใช่หรือไม่?")) return;
+    try {
+      await supabase.from('affiliate_tasks').update({ status: 'pending_remove', error_message: null }).eq('id', id);
+      fetchTasks();
+    } catch (err) {
+      console.error('Error requesting remove task:', err);
+    }
+  };
+
   const getStatusBadge = (status: Task['status'], errorMsg?: string) => {
-    switch(status) {
+    switch (status) {
       case 'pending':
-        return <span className="inline-flex items-center gap-1.5 text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full text-xs font-medium"><Clock className="w-3.5 h-3.5"/> รอดำเนินการ</span>;
+        return <span className="inline-flex items-center gap-1.5 text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full text-xs font-medium"><Clock className="w-3.5 h-3.5" /> รอดำเนินการ</span>;
       case 'processing':
-        return <span className="inline-flex items-center gap-1.5 text-orange-400 bg-orange-500/10 border border-orange-500/20 px-3 py-1 rounded-full text-xs font-medium"><RefreshCw className="w-3.5 h-3.5 animate-spin"/> กำลังแท็ก</span>;
+        return <span className="inline-flex items-center gap-1.5 text-orange-400 bg-orange-500/10 border border-orange-500/20 px-3 py-1 rounded-full text-xs font-medium"><RefreshCw className="w-3.5 h-3.5 animate-spin" /> กำลังแท็ก</span>;
       case 'completed':
-        return <span className="inline-flex items-center gap-1.5 text-green-400 bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full text-xs font-medium"><CheckCircle className="w-3.5 h-3.5"/> สำเร็จ</span>;
+        return <span className="inline-flex items-center gap-1.5 text-green-400 bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full text-xs font-medium"><CheckCircle className="w-3.5 h-3.5" /> สำเร็จ</span>;
       case 'failed':
         return (
           <div className="flex flex-col gap-1 items-start">
-            <span className="inline-flex items-center gap-1.5 text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-1 rounded-full text-xs font-medium"><XCircle className="w-3.5 h-3.5"/> ล้มเหลว</span>
+            <span className="inline-flex items-center gap-1.5 text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-1 rounded-full text-xs font-medium"><XCircle className="w-3.5 h-3.5" /> ล้มเหลว</span>
             {errorMsg && <span className="text-[10px] text-red-400/80 max-w-[200px] truncate" title={errorMsg}>{errorMsg}</span>}
           </div>
         );
       case 'already_exists':
-        return <span className="inline-flex items-center gap-1.5 text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-3 py-1 rounded-full text-xs font-medium"><CheckCircle className="w-3.5 h-3.5"/> มีอยู่แล้ว</span>;
+        return <span className="inline-flex items-center gap-1.5 text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-3 py-1 rounded-full text-xs font-medium"><CheckCircle className="w-3.5 h-3.5" /> มีอยู่แล้ว</span>;
+      case 'pending_remove':
+        return <span className="inline-flex items-center gap-1.5 text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full text-xs font-medium"><Clock className="w-3.5 h-3.5" /> รอถอดลิงก์</span>;
+      case 'removed':
+        return <span className="inline-flex items-center gap-1.5 text-gray-400 bg-gray-500/10 border border-gray-500/20 px-3 py-1 rounded-full text-xs font-medium"><CheckCircle className="w-3.5 h-3.5" /> ถอดลิงก์สำเร็จ</span>;
     }
   };
 
   return (
     <div className="p-8 pb-20 font-sans max-w-7xl mx-auto">
-      
-      <motion.div 
+
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8"
@@ -127,26 +141,26 @@ export default function TasksPage() {
           <h1 className="text-3xl font-extrabold text-white mb-2">Task Queue</h1>
           <p className="text-dark-300">จัดการคิวงานการแท็กสินค้าในโพสต์ของคุณ</p>
         </div>
-        
+
         <div className="flex gap-3 mt-4 md:mt-0">
-          <button 
-            onClick={handleResetFailed} 
+          <button
+            onClick={handleResetFailed}
             className="bg-dark-900 border border-dark-700 text-dark-300 hover:text-white hover:bg-dark-800 transition-colors px-4 py-2.5 rounded-xl flex items-center gap-2 text-sm font-medium shadow-lg"
           >
             <RefreshCw className="w-4 h-4" /> รีเซ็ตงานที่มีปัญหา
           </button>
-          <button 
-            onClick={handleClearCompleted} 
+          <button
+            onClick={handleClearCompleted}
             className="bg-dark-900 border border-dark-700 text-dark-300 hover:text-red-400 hover:bg-red-950 transition-colors px-4 py-2.5 rounded-xl flex items-center gap-2 text-sm font-medium shadow-lg"
           >
             <Trash2 className="w-4 h-4" />
-            ล้างประวัติสำเร็จ
+            ล้างประวัติที่สำเร็จ
           </button>
         </div>
       </motion.div>
 
       {/* Task List */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -164,12 +178,12 @@ export default function TasksPage() {
             <thead className="bg-dark-950/50 text-dark-400 font-medium border-b border-dark-800/60">
               <tr>
                 <th className="px-6 py-4 w-12"></th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Thumbnail</th>
-                <th className="px-6 py-4">Post ID</th>
-                <th className="px-6 py-4">เวลาของโพสต์</th>
-                <th className="px-6 py-4">Shopee Affiliate Link</th>
-                <th className="px-6 py-4 text-right">Link Name</th>
+                <th className="px-6 py-4">สถานะ</th>
+                <th className="px-6 py-4">รูปภาพตัวอย่าง</th>
+                <th className="px-6 py-4">Reels ID</th>
+                <th className="px-6 py-4">โพสต์เมื่อ</th>
+                <th className="px-6 py-4">Shopee Affiliate Link:</th>
+                <th className="px-6 py-4 text-right">Link Name:</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-dark-800/30">
@@ -187,9 +201,9 @@ export default function TasksPage() {
                     </td>
                   </motion.tr>
                 )}
-                
+
                 {tasks.map(task => (
-                  <motion.tr 
+                  <motion.tr
                     key={task.id}
                     initial={{ opacity: 0, backgroundColor: 'rgba(0,0,0,0)' }}
                     animate={{ opacity: 1, backgroundColor: 'rgba(0,0,0,0)' }}
@@ -198,15 +212,26 @@ export default function TasksPage() {
                     className="transition-colors group"
                   >
                     <td className="px-6 py-4">
-                      {task.status === 'pending' || task.status === 'failed' ? (
-                        <button 
-                          onClick={() => handleDeleteTask(task.id)}
-                          className="text-dark-500 hover:text-red-400 p-2 rounded-lg hover:bg-red-500/10 transition-colors"
-                          title="ลบงานนี้"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      ) : null}
+                      <div className="flex items-center gap-1">
+                        {(task.status === 'pending' || task.status === 'failed') && (
+                          <button
+                            onClick={() => handleDeleteTask(task.id)}
+                            className="text-dark-500 hover:text-red-400 p-2 rounded-lg hover:bg-red-500/10 transition-colors"
+                            title="ลบงานนี้"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        {(task.status === 'completed' || task.status === 'already_exists') && (
+                          <button
+                            onClick={() => handleRequestRemoveLink(task.id)}
+                            className="text-dark-500 hover:text-purple-400 p-2 rounded-lg hover:bg-purple-500/10 transition-colors"
+                            title="สั่งบอทลบลิงก์"
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(task.status, task.error_message)}

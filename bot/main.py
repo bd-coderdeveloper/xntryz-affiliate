@@ -42,7 +42,7 @@ def connect_device():
 
 def fetch_pending_tasks():
     try:
-        response = supabase.table('affiliate_tasks').select('*').eq('status', 'pending').order('created_at').execute()
+        response = supabase.table('affiliate_tasks').select('*').in_('status', ['pending', 'pending_remove']).order('created_at').execute()
         return response.data
     except Exception as e:
         print("Error fetching tasks:", e)
@@ -153,6 +153,78 @@ def add_product_flow(task):
         print("⚠️ หาปุ่มบันทึกไม่เจอ")
         
     print("จำลองการทำงานเพิ่มสินค้าเสร็จสิ้น")
+    time.sleep(3) 
+
+def remove_product_flow(task):
+    # 1. ให้เลือก Manage Product
+    print("เลือก Manage Product เพื่อถอดลิงก์...")
+    
+    def find_manage_btn():
+        variants = ["Manage Product", "Manage products", "Manage product", "จัดการสินค้า"]
+        for v in variants:
+            if d(textContains=v).exists: return d(textContains=v)
+            if d(descriptionContains=v).exists: return d(descriptionContains=v)
+        return None
+
+    btn = find_manage_btn()
+    
+    if btn:
+        btn.click()
+    else:
+        print("มองไม่เห็นเมนู ลองเลื่อนหน้าจอลง...")
+        d.swipe(500, 1500, 500, 500, duration=0.3)
+        time.sleep(1.5)
+        
+        btn = find_manage_btn()
+        if btn:
+            btn.click()
+        else:
+            raise Exception("ไม่พบเมนู Manage Product เพื่อถอดลิงก์")
+        
+    time.sleep(3)
+    
+    # 2. เลือก Edit affiliate product
+    print("เลือก Edit affiliate product...")
+    if d(textContains="Edit affiliate product").exists(timeout=3):
+        d(textContains="Edit affiliate product").click()
+    elif d(textContains="แก้ไข").exists(timeout=3):
+        d(textContains="แก้ไข").click()
+    else:
+        raise Exception("ไม่พบเมนู Edit affiliate product (อาจจะไม่มีลิงก์อยู่แล้ว)")
+        
+    time.sleep(3)
+    
+    # 3. ลบ URL และ Link Name
+    print("กำลังลบข้อมูลในช่อง URL และ Link Name...")
+    edit_texts = d(className="android.widget.EditText")
+    if edit_texts.exists and len(edit_texts) > 0:
+        for i in range(len(edit_texts)):
+            edit_texts[i].click()
+            d.clear_text()
+            time.sleep(0.5)
+    else:
+        raise Exception("หาช่องกรอกข้อความไม่เจอ")
+        
+    time.sleep(2)
+    
+    # กดบันทึก (Save)
+    print("กำลังพยายามกดปุ่มบันทึก...")
+    saved = False
+    save_keywords = ["Save", "บันทึก"]
+    for word in save_keywords:
+        if d(text=word).exists:
+            d(text=word).click()
+            saved = True
+            break
+        elif d(description=word).exists:
+            d(description=word).click()
+            saved = True
+            break
+            
+    if not saved:
+        print("⚠️ หาปุ่มบันทึกไม่เจอ")
+        
+    print("จำลองการทำงานถอดลิงก์เสร็จสิ้น")
     time.sleep(3) 
 
 def process_tasks_for_page(page_id, page_tasks):
