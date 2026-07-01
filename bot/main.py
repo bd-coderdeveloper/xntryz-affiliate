@@ -296,10 +296,21 @@ def process_tasks_for_page(page_id, page_tasks):
         print("❌ เกิดข้อผิดพลาดรุนแรงในการสแกนเพจ:", e)
         for pid, task in target_tasks.items():
             update_task_status(task['id'], 'failed', str(e))
+def reset_orphaned_tasks():
+    try:
+        response = supabase.table('affiliate_tasks').select('*').eq('status', 'processing').execute()
+        orphaned = response.data
+        if orphaned:
+            print(f"พบงานที่ค้างสถานะ 'processing' จากรอบก่อน จำนวน {len(orphaned)} งาน กำลังรีเซ็ตให้เป็น 'pending'...")
+            for t in orphaned:
+                supabase.table('affiliate_tasks').update({'status': 'pending'}).eq('id', t['id']).execute()
+    except Exception as e:
+        print("Error resetting orphaned tasks:", e)
 
 def main():
     print("=== เริ่มการทำงาน FB Affiliate Bot ===")
     connect_device()
+    reset_orphaned_tasks()
     
     while True:
         tasks = fetch_pending_tasks()

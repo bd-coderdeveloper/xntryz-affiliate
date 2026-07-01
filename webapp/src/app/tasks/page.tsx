@@ -63,13 +63,13 @@ export default function TaskQueuePage() {
   };
 
   const handleResetFailed = async () => {
-    if (!confirm('คุณต้องการรีเซ็ตคิวงานที่ "ล้มเหลว" ให้กลับมา "รอดำเนินการ" ใหม่ทั้งหมดหรือไม่?')) return;
+    if (!confirm('คุณต้องการรีเซ็ตคิวงานที่ "ล้มเหลว" หรือ "ค้างกำลังแท็ก" ให้กลับมา "รอดำเนินการ" ใหม่ทั้งหมดหรือไม่?')) return;
     
     setLoading(true);
     const { error } = await supabase
       .from('affiliate_tasks')
       .update({ status: 'pending', error_message: null })
-      .eq('status', 'failed');
+      .in('status', ['failed', 'processing']);
       
     if (error) {
       alert(`Error: ${error.message}`);
@@ -105,8 +105,7 @@ export default function TaskQueuePage() {
           </div>
           <div className="flex items-center gap-3">
             <button onClick={handleResetFailed} className="bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 transition-colors px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium border border-orange-500/30">
-              <RefreshCw className="w-4 h-4" />
-              รีเซ็ตงานที่ล้มเหลว
+              <RefreshCw className="w-4 h-4" /> รีเซ็ตงานที่มีปัญหา
             </button>
             <button onClick={handleClearCompleted} className="bg-dark-800 text-dark-300 hover:text-white hover:bg-dark-700 transition-colors px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium border border-dark-700">
               <XCircle className="w-4 h-4" />
