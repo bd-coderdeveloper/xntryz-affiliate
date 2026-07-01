@@ -149,12 +149,11 @@ def process_task(task):
         if not switched:
             print("ไม่พบปุ่มสลับ อาจจะอยู่ในโปรไฟล์เพจอยู่แล้ว")
 
-        # 1. เปิด Facebook ไปที่โพสต์โดยตรงผ่าน Deep Link (ใช้ Permalink แท้)
-        url = task.get('post_url')
-        if not url:
-            url = f"https://www.facebook.com/{task['page_id']}/posts/{task['post_id']}"
+        # 1. เปิด Facebook ไปที่โพสต์โดยตรงผ่าน Deep Link (บังคับใช้ลิงก์ Reels)
+        # แม้ว่าในฐานข้อมูลจะมี post_url เราจะบังคับสร้างลิงก์ Reels แท้ๆ เพื่อความชัวร์
+        url = f"https://www.facebook.com/reel/{task['post_id']}"
             
-        print(f"เปิด URL โพสต์ (Permalink): {url}")
+        print(f"เปิด URL โพสต์ (Reels): {url}")
         d.shell(f'am start -a android.intent.action.VIEW -d "{url}"')
         time.sleep(10) # รอโหลดหน้า Reels Player
         
