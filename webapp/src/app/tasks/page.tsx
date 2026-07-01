@@ -10,6 +10,8 @@ type AffiliateTask = {
   product_id: string;
   status: 'pending' | 'processing' | 'completed' | 'failed';
   created_at: string;
+  thumbnail_url?: string;
+  post_url?: string;
 };
 
 export default function TaskQueuePage() {
@@ -163,7 +165,23 @@ export default function TaskQueuePage() {
                       {task.status === 'completed' && <span className="inline-flex items-center gap-1.5 text-green-400 bg-green-500/10 px-2.5 py-1 rounded-full"><CheckCircle className="w-3.5 h-3.5"/> สำเร็จ</span>}
                       {task.status === 'failed' && <span className="inline-flex items-center gap-1.5 text-red-400 bg-red-500/10 px-2.5 py-1 rounded-full"><XCircle className="w-3.5 h-3.5"/> ล้มเหลว</span>}
                     </td>
-                    <td className="px-6 py-4 font-mono">{task.post_id}</td>
+                    <td className="px-6 py-4 flex items-center gap-3">
+                      {task.thumbnail_url ? (
+                        <img src={task.thumbnail_url} alt="thumbnail" className="w-10 h-10 rounded-md object-cover border border-dark-700" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-md bg-dark-800 border border-dark-700 flex items-center justify-center">
+                          <span className="text-[10px] text-dark-500">No Img</span>
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-mono text-dark-200">{task.post_id}</div>
+                        {task.post_url && (
+                          <a href={task.post_url} target="_blank" rel="noreferrer" className="text-[11px] text-blue-400 hover:underline">
+                            View Post
+                          </a>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 font-mono">{task.product_id}</td>
                     <td className="px-6 py-4 text-right">{new Date(task.created_at).toLocaleString('th-TH')}</td>
                   </tr>

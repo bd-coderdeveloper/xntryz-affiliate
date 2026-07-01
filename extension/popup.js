@@ -112,7 +112,7 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
   statusDiv.textContent = 'กำลังดึงโพสต์...';
   
   let allPosts = [];
-  let nextUrl = `https://graph.facebook.com/v21.0/${pageId}/published_posts?fields=id,created_time,permalink_url&limit=100&access_token=${page.access_token}`;
+  let nextUrl = `https://graph.facebook.com/v21.0/${pageId}/published_posts?fields=id,created_time,permalink_url,full_picture&limit=100&access_token=${page.access_token}`;
   
   try {
     // วนลูป Pagination ดึงโพสต์
@@ -171,6 +171,7 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
             page_id: pageId,
             post_id: actualPostId,
             post_url: post.permalink_url || `https://www.facebook.com/${actualPostId}`,
+            thumbnail_url: post.full_picture || null,
             affiliate_link: affiliateLink,
             link_name: linkName
           })

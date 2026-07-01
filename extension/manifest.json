@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "BD FB Affiliate System",
-  "version": "1.1",
-  "description": "ดึงโพสต์จาก Facebook Page เข้าสู่ระบบจัดการคิวงาน Affiliate",
+  "name": "FB Affiliate Linker (Tasks)",
+  "version": "1.3",
+  "description": "ดึง Post ID จากหน้า Facebook ส่งให้ WebApp (Localhost)",
   "permissions": [
     "activeTab",
     "scripting",
