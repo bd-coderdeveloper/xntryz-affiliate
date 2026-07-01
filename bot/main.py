@@ -4,6 +4,10 @@ import uiautomator2 as u2
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import sys
+import functools
+
+# บังคับให้ print ทุกครั้งส่งข้อมูลออกไปที่ Launcher ทันที (แก้ปัญหา Python Buffer)
+print = functools.partial(print, flush=True)
 
 # โหลดค่าจากไฟล์ .env
 load_dotenv()
