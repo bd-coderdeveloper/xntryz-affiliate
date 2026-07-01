@@ -58,7 +58,7 @@ def update_task_status(task_id, status, error_message=None):
 def expand_short_url(url):
     """
     แกะรอยลิงก์ย่อ (เช่น fb.watch หรือ share/v/) ให้เป็นลิงก์เต็ม
-    เพื่อให้สามารถตรวจสอบรหัส Post ID ได้
+    พร้อมกับดึง ID ทุกตัวที่เกี่ยวข้องจาก HTML (แก้ปัญหา Post ID ไม่ตรงกับ Reel ID)
     """
     import re
     try:
@@ -69,11 +69,19 @@ def expand_short_url(url):
             response = requests.get(url, allow_redirects=True, headers=headers, timeout=10)
             
             if response.status_code == 200:
+                # ค้นหาตัวเลข 14-17 หลักทั้งหมดใน HTML (ครอบคลุม Post ID, Video ID, Reel ID)
+                ids = re.findall(r'\b\d{14,17}\b', response.text)
+                
                 match_og = re.search(r'og:url"\s*content="([^"]+)"', response.text)
-                if match_og:
-                    og_url = match_og.group(1)
-                    print(f"ถอดรหัสลิงก์สำเร็จเป็น: {og_url}")
-                    return og_url
+                og_url = match_og.group(1) if match_og else response.url
+                
+                # รวบรวม ID ทั้งหมดเป็น string ก้อนเดียว 
+                all_ids_str = " ".join(set(ids))
+                print(f"ถอดรหัสลิงก์สำเร็จ: {og_url}")
+                print(f"พบรหัสที่เกี่ยวข้องใน HTML: {all_ids_str}")
+                
+                # คืนค่ากลับไปทั้ง URL เต็มและรหัสทั้งหมด เพื่อให้ระบบหาเจอแน่ๆ
+                return og_url + " " + all_ids_str
                     
             full_url = response.url
             print(f"ถอดรหัสลิงก์ (Fallback): {full_url}")
