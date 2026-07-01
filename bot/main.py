@@ -60,15 +60,23 @@ def expand_short_url(url):
     แกะรอยลิงก์ย่อ (เช่น fb.watch หรือ share/v/) ให้เป็นลิงก์เต็ม
     เพื่อให้สามารถตรวจสอบรหัส Post ID ได้
     """
+    import re
     try:
         if "fb.watch" in url or "share/" in url:
             print(f"พบลิงก์ย่อ: {url} กำลังถอดรหัส...")
-            # ขอ header แบบมือถือเพื่อกัน Facebook บล็อก
-            headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36'}
-            # ใช้ allow_redirects=True เพื่อให้ requests ตามลิงก์ไปจนสุด
-            response = requests.get(url, allow_redirects=True, headers=headers, timeout=5)
+            # ใช้ Dalvik User-Agent เพื่อหลอกว่าเป็นแอปมือถือ ป้องกัน Facebook บล็อก
+            headers = {'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 11; Pixel 5 Build/RQ3A.210805.001.A1)'}
+            response = requests.get(url, allow_redirects=True, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                match_og = re.search(r'og:url"\s*content="([^"]+)"', response.text)
+                if match_og:
+                    og_url = match_og.group(1)
+                    print(f"ถอดรหัสลิงก์สำเร็จเป็น: {og_url}")
+                    return og_url
+                    
             full_url = response.url
-            print(f"ถอดรหัสลิงก์สำเร็จเป็น: {full_url}")
+            print(f"ถอดรหัสลิงก์ (Fallback): {full_url}")
             return full_url
         return url
     except Exception as e:
