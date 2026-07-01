@@ -128,7 +128,7 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
         const json = await res.json();
         if (json.error) {
           // If video_reels endpoint fails (e.g. permission or not available), just skip quietly
-          console.warn('API Error:', json.error.message);
+          console.log('API Error:', json.error.message);
           break;
         }
         
@@ -160,7 +160,7 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
         nextUrl = json.paging && json.paging.next ? json.paging.next : null;
         
       } catch (e) {
-        console.error('Fetch error:', e);
+        console.log('Fetch error:', e);
         break;
       }
     }
