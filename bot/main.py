@@ -247,13 +247,13 @@ def process_tasks_for_page(page_id, page_tasks):
                             task = target_tasks[matched_pid]
                             
                             # หาปุ่ม 3 จุดของโพสต์นี้ (More options)
-                            more_btns = d(descriptionContains="More options")
+                            more_btns = d(description="More options")
                             if not more_btns.exists:
-                                more_btns = d(descriptionContains="More")
+                                more_btns = d(description="More")
                             if not more_btns.exists:
-                                more_btns = d(descriptionContains="เพิ่มเติม")
+                                more_btns = d(description="เพิ่มเติม")
                             if not more_btns.exists:
-                                more_btns = d(descriptionContains="ตัวเลือก")
+                                more_btns = d(description="ตัวเลือก")
                                 
                             if more_btns.exists:
                                 success = False
