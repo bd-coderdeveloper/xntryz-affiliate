@@ -8,7 +8,7 @@ type AffiliateTask = {
   id: string;
   post_id: string;
   product_id: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'already_exists';
   created_at: string;
   thumbnail_url?: string;
   post_url?: string;
@@ -164,6 +164,7 @@ export default function TaskQueuePage() {
                       {task.status === 'processing' && <span className="inline-flex items-center gap-1.5 text-orange-400 bg-orange-500/10 px-2.5 py-1 rounded-full"><RefreshCw className="w-3.5 h-3.5 animate-spin"/> กำลังแท็ก</span>}
                       {task.status === 'completed' && <span className="inline-flex items-center gap-1.5 text-green-400 bg-green-500/10 px-2.5 py-1 rounded-full"><CheckCircle className="w-3.5 h-3.5"/> สำเร็จ</span>}
                       {task.status === 'failed' && <span className="inline-flex items-center gap-1.5 text-red-400 bg-red-500/10 px-2.5 py-1 rounded-full"><XCircle className="w-3.5 h-3.5"/> ล้มเหลว</span>}
+                      {task.status === 'already_exists' && <span className="inline-flex items-center gap-1.5 text-yellow-400 bg-yellow-500/10 px-2.5 py-1 rounded-full"><CheckCircle className="w-3.5 h-3.5"/> มีอยู่แล้ว</span>}
                     </td>
                     <td className="px-6 py-4 flex items-center gap-3">
                       {task.thumbnail_url ? (

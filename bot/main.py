@@ -218,10 +218,11 @@ def process_tasks_for_page(page_id, page_tasks):
                 print("พบปุ่ม Manage Product อยู่บนหน้าจอโดยตรง! ไม่ต้องกด 3 จุด")
                 try:
                     res = add_product_flow(task)
-                    update_task_status(task['id'], 'completed')
                     if res == "already_tagged":
+                        update_task_status(task['id'], 'already_exists')
                         print(f"✅ ข้ามโพสต์ {post_id} เนื่องจากมีลิงก์อยู่แล้ว")
                     else:
+                        update_task_status(task['id'], 'completed')
                         print(f"✅ เพิ่มสินค้าให้โพสต์ {post_id} สำเร็จ")
                 except Exception as e:
                     print(f"❌ เกิดข้อผิดพลาดในการแท็ก: {e}")
@@ -248,10 +249,11 @@ def process_tasks_for_page(page_id, page_tasks):
                             try:
                                 # เข้าสู่วงจรเพิ่มสินค้า
                                 res = add_product_flow(task)
-                                update_task_status(task['id'], 'completed')
                                 if res == "already_tagged":
+                                    update_task_status(task['id'], 'already_exists')
                                     print(f"✅ ข้ามโพสต์ {post_id} เนื่องจากมีลิงก์อยู่แล้ว")
                                 else:
+                                    update_task_status(task['id'], 'completed')
                                     print(f"✅ เพิ่มสินค้าให้โพสต์ {post_id} สำเร็จ")
                                 success = True
                                 break
