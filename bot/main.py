@@ -169,52 +169,71 @@ def process_tasks_for_page(page_id, page_tasks):
             # รอโหลดโพสต์ให้เสร็จ
             time.sleep(7)
             
-            # หาปุ่ม 3 จุดของโพสต์นี้ (More options)
-            # ในหน้า Single Post หรือ Reels Viewer จะมีปุ่มนี้แค่ปุ่มเดียว
-            more_btns = d(description="More options")
-            if not more_btns.exists:
-                more_btns = d(description="More")
-            if not more_btns.exists:
-                more_btns = d(description="เพิ่มเติม")
-            if not more_btns.exists:
-                more_btns = d(description="ตัวเลือก")
+            # ลองเช็คก่อนว่ามีปุ่ม "Manage Product" โชว์อยู่บนหน้าจอเลยหรือไม่ (บางที Reels โชว์ปุ่มนี้เลยโดยไม่ต้องกด 3 จุด)
+            direct_manage = False
+            if d(textContains="Manage Product").exists:
+                direct_manage = True
+            elif d(textContains="Manage products").exists:
+                direct_manage = True
+            elif d(textContains="จัดการสินค้า").exists:
+                direct_manage = True
                 
-            if more_btns.exists:
-                success = False
-                for i in range(len(more_btns)):
-                    try:
-                        print(f"ลองกดปุ่ม 3 จุด อันที่ {i+1}...")
-                        more_btns[i].click()
-                        time.sleep(2)
-                        
-                        try:
-                            # เข้าสู่วงจรเพิ่มสินค้า
-                            add_product_flow(task)
-                            update_task_status(task['id'], 'completed')
-                            print(f"✅ เพิ่มสินค้าให้โพสต์ {post_id} สำเร็จ")
-                            success = True
-                            break
-                        except Exception as e:
-                            if "ไม่พบเมนู Manage Product" in str(e):
-                                # อาจจะไปเปิดผิดโพสต์หรือไม่มีเมนูนี้
-                                print(f"อันที่ {i+1} ไม่มี Manage Product ข้ามไปลองอันถัดไป...")
-                                d.press("back") # ปิดเมนู 3 จุดของปุ่มนี้
-                                time.sleep(1.5)
-                            else:
-                                raise e
-                    except Exception as err:
-                        print(f"❌ เกิดข้อผิดพลาดในการแท็ก: {err}")
-                        update_task_status(task['id'], 'failed', str(err))
-                        d.press("back") # พยายามกดย้อนกลับเผื่อค้างอยู่ในหน้าต่าง
-                        time.sleep(1.5)
-                        break # พังแล้ว ข้ามไปคิวต่อไป
-                        
-                if not success:
-                    print(f"❌ ลองกดปุ่ม 3 จุดทุกอันแล้ว แต่ไม่เจอ Manage Product ในโพสต์ {post_id}")
-                    update_task_status(task['id'], 'failed', "ไม่พบเมนู Manage Product ในโพสต์นี้ (เปิดตรง)")
+            if direct_manage:
+                print("พบปุ่ม Manage Product อยู่บนหน้าจอโดยตรง! ไม่ต้องกด 3 จุด")
+                try:
+                    add_product_flow(task)
+                    update_task_status(task['id'], 'completed')
+                    print(f"✅ เพิ่มสินค้าให้โพสต์ {post_id} สำเร็จ")
+                except Exception as e:
+                    print(f"❌ เกิดข้อผิดพลาดในการแท็ก: {e}")
+                    update_task_status(task['id'], 'failed', str(e))
             else:
-                print(f"⚠️ หาปุ่ม 3 จุดไม่เจอเลยในโพสต์ {post_id} อาจจะโหลดไม่ขึ้น หรือรูปแบบ UI เปลี่ยนไป")
-                update_task_status(task['id'], 'failed', "เปิดลิงก์แล้วแต่ไม่พบปุ่ม 3 จุด")
+                # หาปุ่ม 3 จุดของโพสต์นี้ (More options)
+                # ในหน้า Single Post หรือ Reels Viewer จะมีปุ่มนี้แค่ปุ่มเดียว
+                more_btns = d(description="More options")
+                if not more_btns.exists:
+                    more_btns = d(description="More")
+                if not more_btns.exists:
+                    more_btns = d(description="เพิ่มเติม")
+                if not more_btns.exists:
+                    more_btns = d(description="ตัวเลือก")
+                    
+                if more_btns.exists:
+                    success = False
+                    for i in range(len(more_btns)):
+                        try:
+                            print(f"ลองกดปุ่ม 3 จุด อันที่ {i+1}...")
+                            more_btns[i].click()
+                            time.sleep(2)
+                            
+                            try:
+                                # เข้าสู่วงจรเพิ่มสินค้า
+                                add_product_flow(task)
+                                update_task_status(task['id'], 'completed')
+                                print(f"✅ เพิ่มสินค้าให้โพสต์ {post_id} สำเร็จ")
+                                success = True
+                                break
+                            except Exception as e:
+                                if "ไม่พบเมนู Manage Product" in str(e):
+                                    # อาจจะไปเปิดผิดโพสต์หรือไม่มีเมนูนี้
+                                    print(f"อันที่ {i+1} ไม่มี Manage Product ข้ามไปลองอันถัดไป...")
+                                    d.press("back") # ปิดเมนู 3 จุดของปุ่มนี้
+                                    time.sleep(1.5)
+                                else:
+                                    raise e
+                        except Exception as err:
+                            print(f"❌ เกิดข้อผิดพลาดในการแท็ก: {err}")
+                            update_task_status(task['id'], 'failed', str(err))
+                            d.press("back") # พยายามกดย้อนกลับเผื่อค้างอยู่ในหน้าต่าง
+                            time.sleep(1.5)
+                            break # พังแล้ว ข้ามไปคิวต่อไป
+                            
+                    if not success:
+                        print(f"❌ ลองกดปุ่ม 3 จุดทุกอันแล้ว แต่ไม่เจอ Manage Product ในโพสต์ {post_id}")
+                        update_task_status(task['id'], 'failed', "ไม่พบเมนู Manage Product ในโพสต์นี้ (เปิดตรง)")
+                else:
+                    print(f"⚠️ หาปุ่ม 3 จุดไม่เจอเลยในโพสต์ {post_id} อาจจะโหลดไม่ขึ้น หรือรูปแบบ UI เปลี่ยนไป")
+                    update_task_status(task['id'], 'failed', "เปิดลิงก์แล้วแต่ไม่พบปุ่ม 3 จุด")
             
             # ปิดหน้าโพสต์ปัจจุบัน เพื่อให้เครื่องไม่ค้างหรือแอป Facebook หน่วงเกินไป
             # (กด Back 1-2 ทีเพื่อกลับไปหน้าหลัก)
