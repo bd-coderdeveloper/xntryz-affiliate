@@ -89,6 +89,12 @@ def add_product_flow(task):
     
     # 4. เลือก Add affiliate product
     print("เลือก Add affiliate product...")
+    
+    # เช็คก่อนว่าโพสต์นี้มีลิงก์อยู่แล้วหรือไม่ (ถ้ามี เมนูจะขึ้นว่า Edit affiliate product)
+    if d(textContains="Edit affiliate product").exists(timeout=3) or d(textContains="แก้ไข").exists(timeout=1):
+        print("โพสต์นี้มีการแปะลิงก์อยู่แล้ว (เจอคำว่า Edit / แก้ไข) ข้ามการทำงาน...")
+        return "already_tagged"
+        
     if d(textContains="Add affiliate product").exists(timeout=3):
         d(textContains="Add affiliate product").click()
     elif d(textContains="เพิ่มสินค้า").exists(timeout=3):
@@ -211,9 +217,12 @@ def process_tasks_for_page(page_id, page_tasks):
             if direct_manage:
                 print("พบปุ่ม Manage Product อยู่บนหน้าจอโดยตรง! ไม่ต้องกด 3 จุด")
                 try:
-                    add_product_flow(task)
+                    res = add_product_flow(task)
                     update_task_status(task['id'], 'completed')
-                    print(f"✅ เพิ่มสินค้าให้โพสต์ {post_id} สำเร็จ")
+                    if res == "already_tagged":
+                        print(f"✅ ข้ามโพสต์ {post_id} เนื่องจากมีลิงก์อยู่แล้ว")
+                    else:
+                        print(f"✅ เพิ่มสินค้าให้โพสต์ {post_id} สำเร็จ")
                 except Exception as e:
                     print(f"❌ เกิดข้อผิดพลาดในการแท็ก: {e}")
                     update_task_status(task['id'], 'failed', str(e))
@@ -238,9 +247,12 @@ def process_tasks_for_page(page_id, page_tasks):
                             
                             try:
                                 # เข้าสู่วงจรเพิ่มสินค้า
-                                add_product_flow(task)
+                                res = add_product_flow(task)
                                 update_task_status(task['id'], 'completed')
-                                print(f"✅ เพิ่มสินค้าให้โพสต์ {post_id} สำเร็จ")
+                                if res == "already_tagged":
+                                    print(f"✅ ข้ามโพสต์ {post_id} เนื่องจากมีลิงก์อยู่แล้ว")
+                                else:
+                                    print(f"✅ เพิ่มสินค้าให้โพสต์ {post_id} สำเร็จ")
                                 success = True
                                 break
                             except Exception as e:
